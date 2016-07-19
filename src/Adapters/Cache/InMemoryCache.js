@@ -1,10 +1,30 @@
 const DEFAULT_CACHE_TTL = 5 * 1000;
 
+var redis = require('redis');
 
 export class InMemoryCache {
   constructor({
     ttl = DEFAULT_CACHE_TTL
   }) {
+    console.log('InMemoryCache');
+    var client = redis.createClient('6379','luck-redis.5jot1u.0001.use1.cache.amazonaws.com');
+    client.on('connect', function() {
+        console.log('connected');
+    });
+    client.set('framework', 'node js', function(err, reply) {
+        if(err) {
+            console.log(err);
+        } else {
+            console.log(reply);
+        }
+    });
+    client.get('framework', function(err, reply) {
+        if(err) {
+            console.log(err);
+        } else {
+            console.log(reply);
+        }
+    });
     this.ttl = ttl;
     this.cache = Object.create(null);
   }
