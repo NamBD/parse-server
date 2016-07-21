@@ -43,54 +43,57 @@ function nobody(config) {
 
 // Returns a promise that resolves to an Auth object
 var getAuthForSessionToken = function({ config, sessionToken, installationId } = {}) {
-  return config.cacheController.user.get(sessionToken).then((userJSON) => {
-    if (userJSON) {
-      let cachedUser = Parse.Object.fromJSON(userJSON);
-      return Promise.resolve(new Auth({config, isMaster: false, installationId, user: cachedUser}));
+  return config.cacheController.userId.get(sessionToken).then((userId) => {
+    if (userId) {
+      return config.cacheController.userObject.get(userId).then((userJSON) => {
+        if (userJSON) {
+          userJSON['sessionToken'] = sessionToken;
+          let cachedUser = Parse.Object.fromJSON(userJSON);
+          return Promise.resolve(new Auth({config, isMaster: false, installationId, user: cachedUser}));
+        } else {
+          return loadFromDB(config, sessionToken, installationId);
+        }
+      });
+    } else {
+      return loadFromDB(config, sessionToken, installationId);
+    }
+  });
+};
+
+function loadFromDB(config, sessionToken, installationId) {
+
+  var restOptions = {
+    limit: 1,
+    include: 'user'
+  };
+
+  var query = new RestQuery(config, master(config), '_Session', {sessionToken}, restOptions);
+  return query.execute().then((response) => {
+    var results = response.results;
+    if (results.length !== 1 || !results[0]['user']) {
+      throw new Parse.Error(Parse.Error.INVALID_SESSION_TOKEN, 'invalid session token');
     }
 
-    var restOptions = {
-      limit: 1,
-      include: 'user'
-    };
-
-    var query = new RestQuery(config, master(config), '_Session', {sessionToken}, restOptions);
-    return query.execute().then((response) => {
-      var results = response.results;
-      if (results.length !== 1 || !results[0]['user']) {
-        throw new Parse.Error(Parse.Error.INVALID_SESSION_TOKEN, 'invalid session token');
-      }
-
-      var now = new Date(),
-        expiresAt = results[0].expiresAt ? new Date(results[0].expiresAt.iso) : undefined;
-      if (expiresAt < now) {
-        throw new Parse.Error(Parse.Error.INVALID_SESSION_TOKEN,
-          'Session token is expired.');
-      }
-      var obj = results[0]['user'];
-      delete obj.password;
-      obj['className'] = '_User';
-      obj['sessionToken'] = sessionToken;
-      config.cacheController.user.put(sessionToken, obj);
-      let userObject = Parse.Object.fromJSON(obj);
-      return new Auth({config, isMaster: false, installationId, user: userObject});
-    });
+    var now = new Date(),
+      expiresAt = results[0].expiresAt ? new Date(results[0].expiresAt.iso) : undefined;
+    if (expiresAt < now) {
+      throw new Parse.Error(Parse.Error.INVALID_SESSION_TOKEN,
+        'Session token is expired.');
+    }
+    var obj = results[0]['user'];
+    delete obj.password;
+    obj['className'] = '_User';
+    config.cacheController.userId.put(sessionToken, obj.objectId);
+    config.cacheController.userObject.put(obj.objectId, obj);
+    obj['sessionToken'] = sessionToken;
+    let userObject = Parse.Object.fromJSON(obj);
+    return new Auth({config, isMaster: false, installationId, user: userObject});
   });
 };
 
 // Returns a promise that resolves to an array of role names
 Auth.prototype.getUserRoles = function() {
-  if (this.isMaster || !this.user) {
-    return Promise.resolve([]);
-  }
-  if (this.fetchedRoles) {
-    return Promise.resolve(this.userRoles);
-  }
-  if (this.rolePromise) {
-    return this.rolePromise;
-  }
-  this.rolePromise = this._loadRoles();
-  return this.rolePromise;
+  return Promise.resolve([]);
 };
 
 // Iterates through the role tree and compiles a users roles

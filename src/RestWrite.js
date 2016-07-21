@@ -293,10 +293,10 @@ RestWrite.prototype.handleAuthData = function(authData) {
         // Login with auth data
         delete results[0].password;
         let userResult = results[0];
-        
+
         // need to set the objectId first otherwise location has trailing undefined
         this.data.objectId = userResult.objectId;
-        
+
         // Determine if authData was updated
         let mutatedAuthData = {};
         Object.keys(authData).forEach((provider) => {
@@ -306,7 +306,7 @@ RestWrite.prototype.handleAuthData = function(authData) {
             mutatedAuthData[provider] = providerData;
           }
         });
-        
+
         this.response = {
           response: userResult,
           location: this.location()
@@ -325,7 +325,7 @@ RestWrite.prototype.handleAuthData = function(authData) {
           return this.config.database.update(this.className, {objectId: this.data.objectId}, {authData: mutatedAuthData}, {});
         }
         return;
-        
+
       } else if (this.query && this.query.objectId) {
         // Trying to update auth data but users
         // are different
@@ -351,14 +351,7 @@ RestWrite.prototype.transformUser = function() {
   if (this.query) {
     // If we're updating a _User object, we need to clear out the cache for that user. Find all their
     // session tokens, and remove them from the cache.
-    promise = new RestQuery(this.config, Auth.master(this.config), '_Session', { user: {
-      __type: "Pointer",
-      className: "_User",
-      objectId: this.objectId(),
-    }}).execute()
-    .then(results => {
-      results.results.forEach(session => this.config.cacheController.user.del(session.sessionToken));
-    });
+    promise = this.config.cacheController.userObject.del(this.objectId());
   }
 
   return promise.then(() => {
@@ -473,7 +466,7 @@ RestWrite.prototype.handleFollowup = function() {
     return this.config.database.destroy('_Session', sessionQuery)
     .then(this.handleFollowup.bind(this));
   }
-  
+
   if (this.storage && this.storage['generateNewSession']) {
     delete this.storage['generateNewSession'];
     return this.createSessionToken()
@@ -828,7 +821,7 @@ RestWrite.prototype.runDatabaseOperation = function() {
     .then(response => {
       response.objectId = this.data.objectId;
       response.createdAt = this.data.createdAt;
-      
+
       if (this.responseShouldHaveUsername) {
         response.username = this.data.username;
       }
@@ -929,7 +922,7 @@ RestWrite.prototype.updateResponseWithData = function(response, data) {
     let responseValue = response[fieldName];
 
     response[fieldName] = responseValue || dataValue;
-    
+
     // Strips operations from responses
     if (response[fieldName] && response[fieldName].__op) {
       delete response[fieldName];
