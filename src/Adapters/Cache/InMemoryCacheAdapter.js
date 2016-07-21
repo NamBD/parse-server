@@ -26,7 +26,7 @@ export class InMemoryCacheAdapter {
 
   put(key, value, ttl = 1800) {
     var expire = ttl > 0 && !isNaN(ttl) ? ttl : null;
-    this.client.set(key, JSON.stringify(value), expire, function(error, reply) {
+    this.client.set(key, JSON.stringify(value), 'NX', 'EX', expire, function(error, reply) {
       if (error) {
         console.log(error);
       } else {
