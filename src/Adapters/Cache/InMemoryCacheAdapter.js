@@ -25,13 +25,14 @@ export class InMemoryCacheAdapter {
   }
 
   put(key, value, ttl = 1800) {
-    this.client.set(key, JSON.stringify(value), function(error, reply) {
+    var expire = ttl > 0 && !isNaN(ttl) ? ttl : null;
+    this.client.set(key, JSON.stringify(value), expire, function(error, reply) {
       if (error) {
         console.log(error);
       } else {
-        if (ttl > 0 && !isNaN(ttl)) {
-          this.client.expire(key, ttl);
-        }
+        //if (ttl > 0 && !isNaN(ttl)) {
+          //this.client.expire(key, ttl);
+        //}
         console.log('Record Set');
       }
     });
