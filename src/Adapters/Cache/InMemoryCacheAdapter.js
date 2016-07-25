@@ -51,7 +51,13 @@ export class InMemoryCacheAdapter {
   }
 
   clear() {
-    //this.cache.clear();
+    this.client.flushdb(function(error, reply) {
+      if (error) {
+        console.log(error);
+      } else {
+        console.log('All Records Flushed');
+      }
+    });
     return Promise.resolve();
   }
 }
