@@ -243,7 +243,12 @@ export class MongoStorageAdapter {
   // schemas cannot be retrieved, returns a promise that rejects. Requirements for the
   // rejection reason are TBD.
   getAllClasses() {
-    return this._schemaCollection().then(schemasCollection => schemasCollection._fetchAllSchemasFrom_SCHEMA());
+    var allSchemas = this._schemaCollection().then(schemasCollection => schemasCollection._fetchAllSchemasFrom_SCHEMA()).then(ls => {
+      console.log(new Date());
+      console.log(JSON.parse(ls));
+      return ls;
+    });
+    return allSchemas;
   }
 
   // Return a promise for the schema with the given name, in Parse format. If
