@@ -9,17 +9,11 @@ var querystring = require('querystring');
 var request = require('request');
 var rp = require('request-promise');
 
-var config;
-let database;
+var config = new Config('test');
+let database = config.database;
 var nobody = auth.nobody(config);
 
 describe('rest query', () => {
-
-  beforeEach(() => {
-    config = new Config('test');
-    database = config.database;
-  });
-
   it('basic query', (done) => {
     rest.create(config, nobody, 'TestObject', {}).then(() => {
       return rest.find(config, nobody, 'TestObject', {});
