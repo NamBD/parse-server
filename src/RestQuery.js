@@ -394,6 +394,17 @@ RestQuery.prototype.runFind = function() {
     if (this.className === '_User') {
       for (var result of results) {
         delete result.password;
+
+        if (result.authData) {
+          Object.keys(result.authData).forEach((provider) => {
+            if (result.authData[provider] === null) {
+              delete result.authData[provider];
+            }
+          });
+          if (Object.keys(result.authData).length == 0) {
+            delete result.authData;
+          }
+        }
       }
     }
 
@@ -493,7 +504,7 @@ function includePath(config, auth, response, path) {
         obj.__type = 'Object';
         obj.className = includeResponse.className;
 
-        if (obj.className == "_User") {
+        if (obj.className == "_User" && !auth.isMaster) {
           delete obj.sessionToken;
           delete obj.authData;
         }

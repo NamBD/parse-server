@@ -3,6 +3,8 @@
 // mount is the URL for the root of the API; includes http, domain, etc.
 
 import AppCache from './cache';
+import SchemaCache from './Controllers/SchemaCache';
+import DatabaseController from './Controllers/DatabaseController';
 
 function removeTrailingSlash(str) {
   if (!str) {
@@ -32,14 +34,23 @@ export class Config {
     this.fileKey = cacheInfo.fileKey;
     this.facebookAppIds = cacheInfo.facebookAppIds;
     this.allowClientClassCreation = cacheInfo.allowClientClassCreation;
-    this.database = cacheInfo.databaseController;
+
+    // Create a new DatabaseController per request
+    if (cacheInfo.databaseController) {
+      const schemaCache = new SchemaCache(cacheInfo.cacheController, cacheInfo.schemaCacheTTL);
+      this.database = new DatabaseController(cacheInfo.databaseController.adapter, schemaCache);
+    }
+
+    this.schemaCacheTTL = cacheInfo.schemaCacheTTL;
 
     this.serverURL = cacheInfo.serverURL;
     this.publicServerURL = removeTrailingSlash(cacheInfo.publicServerURL);
     this.verifyUserEmails = cacheInfo.verifyUserEmails;
     this.preventLoginWithUnverifiedEmail = cacheInfo.preventLoginWithUnverifiedEmail;
+    this.emailVerifyTokenValidityDuration = cacheInfo.emailVerifyTokenValidityDuration;
     this.appName = cacheInfo.appName;
 
+    this.analyticsController = cacheInfo.analyticsController;
     this.cacheController = cacheInfo.cacheController;
     this.hooksController = cacheInfo.hooksController;
     this.filesController = cacheInfo.filesController;
@@ -53,6 +64,7 @@ export class Config {
     this.sessionLength = cacheInfo.sessionLength;
     this.expireInactiveSessions = cacheInfo.expireInactiveSessions;
     this.generateSessionExpiresAt = this.generateSessionExpiresAt.bind(this);
+    this.generateEmailVerifyTokenExpiresAt = this.generateEmailVerifyTokenExpiresAt.bind(this);
     this.revokeSessionOnPasswordReset = cacheInfo.revokeSessionOnPasswordReset;
   }
 
@@ -64,10 +76,11 @@ export class Config {
     revokeSessionOnPasswordReset,
     expireInactiveSessions,
     sessionLength,
+    emailVerifyTokenValidityDuration
   }) {
     const emailAdapter = userController.adapter;
     if (verifyUserEmails) {
-      this.validateEmailConfiguration({emailAdapter, appName, publicServerURL});
+      this.validateEmailConfiguration({emailAdapter, appName, publicServerURL, emailVerifyTokenValidityDuration});
     }
 
     if (typeof revokeSessionOnPasswordReset !== 'boolean') {
@@ -83,7 +96,7 @@ export class Config {
     this.validateSessionConfiguration(sessionLength, expireInactiveSessions);
   }
 
-  static validateEmailConfiguration({emailAdapter, appName, publicServerURL}) {
+static validateEmailConfiguration({emailAdapter, appName, publicServerURL, emailVerifyTokenValidityDuration}) {
     if (!emailAdapter) {
       throw 'An emailAdapter is required for e-mail verification and password resets.';
     }
@@ -92,6 +105,13 @@ export class Config {
     }
     if (typeof publicServerURL !== 'string') {
       throw 'A public server url is required for e-mail verification and password resets.';
+    }
+    if (emailVerifyTokenValidityDuration) {
+      if (isNaN(emailVerifyTokenValidityDuration)) {
+        throw 'Email verify token validity duration must be a valid number.';
+      } else if (emailVerifyTokenValidityDuration <= 0) {
+        throw 'Email verify token validity duration must be a value greater than 0.'
+      }
     }
   }
 
@@ -116,6 +136,14 @@ export class Config {
         throw 'Session length must be a value greater than 0.'
       }
     }
+  }
+
+  generateEmailVerifyTokenExpiresAt() {
+    if (!this.verifyUserEmails || !this.emailVerifyTokenValidityDuration) {
+      return undefined;
+    }
+    var now = new Date();
+    return new Date(now.getTime() + (this.emailVerifyTokenValidityDuration*1000));
   }
 
   generateSessionExpiresAt() {

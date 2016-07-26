@@ -1029,6 +1029,36 @@ describe('Parse.User testing', () => {
     });
   });
 
+  it_exclude_dbs(['postgres'])("user authData should be available in cloudcode (#2342)", (done) => {
+
+    Parse.Cloud.define('checkLogin', (req, res) => {
+      expect(req.user).not.toBeUndefined();
+      expect(Parse.FacebookUtils.isLinked(req.user)).toBe(true);
+      res.success();
+    });
+
+    var provider = getMockFacebookProvider();
+    Parse.User._registerAuthenticationProvider(provider);
+    Parse.User._logInWith("facebook", {
+      success: function(model) {
+        ok(model instanceof Parse.User, "Model should be a Parse.User");
+        strictEqual(Parse.User.current(), model);
+        ok(model.extended(), "Should have used subclass.");
+        strictEqual(provider.authData.id, provider.synchronizedUserId);
+        strictEqual(provider.authData.access_token, provider.synchronizedAuthToken);
+        strictEqual(provider.authData.expiration_date, provider.synchronizedExpiration);
+        ok(model._isLinked("facebook"), "User should be linked to facebook");
+
+        Parse.Cloud.run('checkLogin').then(done, done);
+      },
+      error: function(model, error) {
+        console.error(model, error);
+        ok(false, "linking should have worked");
+        done();
+      }
+    });
+  });
+
   it_exclude_dbs(['postgres'])("log in with provider and update token", (done) => {
     var provider = getMockFacebookProvider();
     var secondProvider = getMockFacebookProviderWithIdToken('8675309', 'jenny_valid_token');
@@ -2257,6 +2287,27 @@ describe('Parse.User testing', () => {
     })
   });
 
+  it_exclude_dbs(['postgres'])('should not serve null authData keys', (done) => {
+    let database = new Config(Parse.applicationId).database;
+    database.create('_User', {
+      username: 'user',
+      _hashed_password: '$2a$10$8/wZJyEuiEaobBBqzTG.jeY.XSFJd0rzaN//ososvEI4yLqI.4aie',
+      _auth_data_facebook: null
+    }, {}).then(() => {
+      return new Parse.Query(Parse.User)
+        .equalTo('username', 'user')
+        .first({useMasterKey: true});
+    }).then((user) => {
+      let authData = user.get('authData');
+      expect(user.get('username')).toEqual('user');
+      expect(authData).toBeUndefined();
+      done();
+    }).catch((err) => {
+      fail('this should not fail');
+      done();
+    })
+  });
+
   it_exclude_dbs(['postgres'])('should cleanup null authData keys ParseUser update (regression test for #1198, #2252)', (done) => {
     Parse.Cloud.beforeSave('_User', (req, res) => {
       req.object.set('foo', 'bar');
@@ -2595,5 +2646,22 @@ describe('Parse.User testing', () => {
         })
       });
     });
-  })
+  });
+
+  it_exclude_dbs(['postgres'])('should not fail querying non existing relations', done => { 
+    let user = new Parse.User();
+    user.set({
+      username: 'hello',
+      password: 'world'
+    })
+    user.signUp().then(() => {
+      return Parse.User.current().relation('relation').query().find();
+    }).then((res) => {
+      expect(res.length).toBe(0);
+      done();
+    }).catch((err) => {
+      fail(JSON.stringify(err));
+      done();
+    });
+  });
 });

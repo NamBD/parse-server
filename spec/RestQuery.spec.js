@@ -7,12 +7,19 @@ var rest = require('../src/rest');
 
 var querystring = require('querystring');
 var request = require('request');
+var rp = require('request-promise');
 
-var config = new Config('test');
-let database = config.database;
+var config;
+let database;
 var nobody = auth.nobody(config);
 
 describe('rest query', () => {
+
+  beforeEach(() => {
+    config = new Config('test');
+    database = config.database;
+  });
+
   it('basic query', (done) => {
     rest.create(config, nobody, 'TestObject', {}).then(() => {
       return rest.find(config, nobody, 'TestObject', {});
@@ -167,37 +174,37 @@ describe('rest query', () => {
         'X-Parse-Application-Id': 'test',
         'X-Parse-REST-API-Key': 'rest'
       };
-      request.get({
+      
+      let p0 = rp.get({
         headers: headers,
         url: 'http://localhost:8378/1/classes/TestParameterEncode?'
                          + querystring.stringify({
                              where: '{"foo":{"$ne": "baz"}}',
                              limit: 1
                          }).replace('=', '%3D'),
-      }, (error, response, body) => {
-        expect(error).toBe(null);
-        var b = JSON.parse(body);
+      }).then(fail, (response) => {
+        let error = response.error;
+        var b = JSON.parse(error);
         expect(b.code).toEqual(Parse.Error.INVALID_QUERY);
-        done();
       });
-    }).then(() => {
-      var headers = {
-        'X-Parse-Application-Id': 'test',
-        'X-Parse-REST-API-Key': 'rest'
-      };
-      request.get({
+
+      let p1 = rp.get({
         headers: headers,
         url: 'http://localhost:8378/1/classes/TestParameterEncode?'
                          + querystring.stringify({
                              limit: 1
                          }).replace('=', '%3D'),
-      }, (error, response, body) => {
-        expect(error).toBe(null);
-        var b = JSON.parse(body);
+      }).then(fail, (response) => {
+        let error = response.error;
+        var b = JSON.parse(error);
         expect(b.code).toEqual(Parse.Error.INVALID_QUERY);
-        done();
       });
-    });
+      return Promise.all([p0, p1]);
+    }).then(done).catch((err) => {
+      console.error(err);
+      fail('should not fail');
+      done();
+    })
   });
 
   it('query with limit = 0', (done) => {

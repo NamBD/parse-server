@@ -1017,7 +1017,7 @@ describe('miscellaneous', function() {
       fail('Validation should not have succeeded');
       done();
     }, (e) => {
-      expect(e.code).toEqual(141);
+      expect(e.code).toEqual(142);
       expect(e.message).toEqual('Validation failed.');
       done();
     });
@@ -1030,6 +1030,23 @@ describe('miscellaneous', function() {
     });
 
     Parse.Cloud.run('func', {nullParam: null})
+    .then(() => {
+      done()
+    }, e => {
+      fail('cloud code call failed');
+      done();
+    });
+  });
+
+  it('can handle date params in cloud functions (#2214)', done => {
+    let date = new Date();
+    Parse.Cloud.define('dateFunc', (request, response) => {
+      expect(request.params.date.__type).toEqual('Date');
+      expect(request.params.date.iso).toEqual(date.toISOString());
+      response.success('yay');
+    });
+
+    Parse.Cloud.run('dateFunc', {date: date})
     .then(() => {
       done()
     }, e => {
