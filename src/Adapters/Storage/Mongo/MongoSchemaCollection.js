@@ -109,7 +109,10 @@ class MongoSchemaCollection {
 
   _fetchAllSchemasFrom_SCHEMA() {
     return this._collection._rawFind({})
-    .then(schemas => schemas.map(mongoSchemaToParseSchema));
+    .then(schemas => {
+      console.log(schemas);
+      schemas.map(mongoSchemaToParseSchema);
+    });
   }
 
   _fechOneSchemaFrom_SCHEMA(name: string) {
