@@ -245,7 +245,7 @@ export class MongoStorageAdapter {
   getAllClasses() {
     var allSchemas = this._schemaCollection().then(schemasCollection => schemasCollection._fetchAllSchemasFrom_SCHEMA()).then(ls => {
       console.log(new Date());
-      console.log(ls);
+      console.log(JSON.parse(ls));
       return ls;
     });
     return allSchemas;
