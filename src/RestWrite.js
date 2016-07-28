@@ -800,6 +800,7 @@ RestWrite.prototype.runDatabaseOperation = function() {
       this.data.ACL = ACL;
     } else if (this.className === 'userSettings') {
       var ACL = {};
+      ACL['*'] = { read: true, write: false };
       ACL[this.auth.user.id] = { read: true, write: true };
       this.data.ACL = ACL;
     }
