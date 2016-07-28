@@ -776,10 +776,8 @@ RestWrite.prototype.runDatabaseOperation = function() {
   }
 
   if (this.query) {
-    // Force the user to not lockout
-    // Matched with parse.com
-    if (this.className === '_User' && this.data.ACL) {
-      this.data.ACL[this.query.objectId] = { read: true, write: true };
+    if ((this.className === '_User' || this.className === '_Installation' || this.className === 'userSettings') && this.data.ACL) {
+      throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Cannot update ACL.');
     }
     // Run an update
     return this.config.database.update(this.className, this.query, this.data, this.runOptions)
@@ -791,16 +789,18 @@ RestWrite.prototype.runDatabaseOperation = function() {
       this.response = { response };
     });
   } else {
-    // Set the default ACL for the new _User
+    // Set the default ACL for the new _User, _Installation, or userSettings
     if (this.className === '_User') {
-      var ACL = this.data.ACL;
-      // default public r/w ACL
-      if (!ACL) {
-        ACL = {};
-        //ACL['*'] = { read: true, write: false };
-      }
-      // make sure the user is not locked down
+      var ACL = {};
       ACL[this.data.objectId] = { read: true, write: true };
+      this.data.ACL = ACL;
+    } else if (this.className === '_Installation') {
+      var ACL = {};
+      ACL['*'] = { read: false, write: true };
+      this.data.ACL = ACL;
+    } else if (this.className === 'userSettings') {
+      var ACL = {};
+      ACL[this.auth.user.id] = { read: true, write: true };
       this.data.ACL = ACL;
     }
 
