@@ -755,9 +755,9 @@ RestWrite.prototype.runDatabaseOperation = function() {
     return;
   }
 
-  if (this.className === '_Role') {
-    this.config.cacheController.role.clear();
-  }
+  //if (this.className === '_Role') {
+    //this.config.cacheController.role.clear();
+  //}
 
   if (this.className === '_User' &&
       this.query &&

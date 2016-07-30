@@ -6,12 +6,12 @@ export class PurgeRouter extends PromiseRouter {
   handlePurge(req) {
     return req.config.database.purgeCollection(req.params.className)
     .then(() => {
-      var cacheAdapter = req.config.cacheController;
-      if (req.params.className == '_Session') {
-        cacheAdapter.user.clear();
-      } else if (req.params.className == '_Role') {
-        cacheAdapter.role.clear();
-      }
+      //var cacheAdapter = req.config.cacheController;
+      //if (req.params.className == '_Session') {
+        //cacheAdapter.user.clear();
+      //} else if (req.params.className == '_Role') {
+        //cacheAdapter.role.clear();
+      //}
       return {response: {}};
     });
   }
