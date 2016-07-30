@@ -1,4 +1,5 @@
 import MongoCollection from './MongoCollection';
+import AppCache from './cache';
 
 function mongoFieldToParseSchemaField(type) {
   if (type[0] === '*') {
@@ -108,18 +109,65 @@ class MongoSchemaCollection {
   }
 
   _fetchAllSchemasFrom_SCHEMA() {
-    return this._collection._rawFind({})
+
+    var hardSchema = AppCache.get('hardSchema');
+
+    return Promise.resolve(hardSchema)
     .then(schemas => schemas.map(mongoSchemaToParseSchema));
+
+    //return this._collection._rawFind({})
+    //.then(schemas => schemas.map(mongoSchemaToParseSchema));
   }
 
   _fechOneSchemaFrom_SCHEMA(name: string) {
-    return this._collection._rawFind(_mongoSchemaQueryFromNameQuery(name), { limit: 1 }).then(results => {
-      if (results.length === 1) {
-        return mongoSchemaToParseSchema(results[0]);
+
+    var hardSchema = AppCache.get('hardSchema');
+    var hardSchemaIndex = -1;
+
+    switch (name) {
+      case '_Installation':
+        hardSchemaIndex = 0;
+        break;
+      case '_Role':
+        hardSchemaIndex = 1;
+        break;
+      case '_Session':
+        hardSchemaIndex = 2;
+        break;
+      case '_User':
+        hardSchemaIndex = 3;
+        break;
+      case 'banned':
+        hardSchemaIndex = 4;
+        break;
+      case 'report':
+        hardSchemaIndex = 5;
+        break;
+      case 'userSettings':
+        hardSchemaIndex = 6;
+        break;
+      case 'match':
+        hardSchemaIndex = 7;
+        break;
+      case 'message':
+        hardSchemaIndex = 8;
+    }
+
+    return Promise.resolve(hardSchema).then(results => {
+      if (hardSchemaIndex > -1) {
+        return mongoSchemaToParseSchema(results[hardSchemaIndex]);
       } else {
         throw undefined;
       }
     });
+
+    //return this._collection._rawFind(_mongoSchemaQueryFromNameQuery(name), { limit: 1 }).then(results => {
+      //if (results.length === 1) {
+        //return mongoSchemaToParseSchema(results[0]);
+      //} else {
+        //throw undefined;
+      //}
+    //});
   }
 
   // Atomically find and delete an object based on query.

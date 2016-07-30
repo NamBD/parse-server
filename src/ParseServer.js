@@ -139,6 +139,7 @@ class ParseServer {
     expireInactiveSessions = true,
     verbose = false,
     revokeSessionOnPasswordReset = true,
+    hardSchema,
     __indexBuildCompletionCallbackForTests = () => {},
   }) {
     // Initialize the node client SDK automatically
@@ -255,6 +256,8 @@ class ParseServer {
       revokeSessionOnPasswordReset,
       databaseController,
     });
+
+    AppCache.put('hardSchema', hardSchema);
 
     // To maintain compatibility. TODO: Remove in some version that breaks backwards compatability
     if (process.env.FACEBOOK_APP_ID) {
