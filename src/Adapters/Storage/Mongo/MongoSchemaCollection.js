@@ -1,5 +1,5 @@
 import MongoCollection from './MongoCollection';
-import AppCache from './cache';
+import AppCache from '../../../cache';
 
 function mongoFieldToParseSchemaField(type) {
   if (type[0] === '*') {
