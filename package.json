@@ -1,12 +1,12 @@
 {
   "name": "parse-server-luck",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "An express module providing a Parse-compatible API server with some luck",
 
   "main": "lib/index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/NamBD/parse-server"
+    "url": "https://github.com/baddevelopment/parse-server-luck"
   },
   "files": [
     "bin/",
