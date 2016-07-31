@@ -1,5 +1,5 @@
 var redis = require('redis');
-var logger = require('../logger');
+var logger = require('../../logger');
 
 export class InMemoryCacheAdapter {
 
