@@ -1,11 +1,12 @@
 var redis = require('redis');
+var logger = require('../logger');
 
 export class InMemoryCacheAdapter {
 
   constructor(ctx) {
     this.client = redis.createClient('6379','luck-redis.5jot1u.0001.use1.cache.amazonaws.com');
     this.client.on('connect', function() {
-        console.log('connected');
+        logger.info('redis connected');
     });
   }
 
@@ -13,11 +14,10 @@ export class InMemoryCacheAdapter {
     return new Promise((resolve, reject) => {
       this.client.get(key, function(error, record) {
         if (error || record == null) {
-          console.log('record not found');
+          logger.error('record not found - Key: ' + key);
           return resolve(null);
         } else {
-          console.log('record found:');
-          console.log(JSON.parse(record));
+          logger.info('record found - key: ' + key);
           return resolve(JSON.parse(record));
         }
       });
@@ -26,25 +26,33 @@ export class InMemoryCacheAdapter {
 
   put(key, value, ttl = 1800) {
     var expire = ttl > 0 && !isNaN(ttl) ? ttl : null;
-    this.client.set(key, JSON.stringify(value), 'NX', 'EX', expire, function(error, reply) {
-      if (error) {
-        console.log(error);
-      } else {
-        //if (ttl > 0 && !isNaN(ttl)) {
-          //this.client.expire(key, ttl);
-        //}
-        console.log('Record Set');
-      }
-    });
+    if (expire)
+    {
+        this.client.set(key, JSON.stringify(value), 'NX', 'EX', expire, function(error, reply) {
+          if (error) {
+            logger.error(error);
+          } else {
+            logger.info('Record Set with expire.  Key: ' + key + '  ,   expire: ' + expire);
+          }
+        });
+    } else {
+      this.client.set(key, JSON.stringify(value), function(error, reply) {
+        if (error) {
+          logger.error(error);
+        } else {
+          logger.info('Record Set without expire - Key: ' + key);
+        }
+      });
+    }
     return Promise.resolve();
   }
 
   del(key) {
     this.client.del(key, function(error, reply) {
       if (error) {
-        console.log(error);
+        logger.error(error);
       } else {
-        console.log('Record Deleted');
+        logger.info('Record Deleted - Key: ' + key);
       }
     });
     return Promise.resolve();
@@ -53,9 +61,9 @@ export class InMemoryCacheAdapter {
   clear() {
     this.client.flushdb(function(error, reply) {
       if (error) {
-        console.log(error);
+        logger.error(error);
       } else {
-        console.log('All Records Flushed');
+        logger.info('All Records Flushed');
       }
     });
     return Promise.resolve();
