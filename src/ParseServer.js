@@ -140,10 +140,14 @@ class ParseServer {
     verbose = false,
     revokeSessionOnPasswordReset = true,
     hardSchema,
+    redisPort,
+    redisURL,
     __indexBuildCompletionCallbackForTests = () => {},
   }) {
 
     AppCache.put('hardSchema', hardSchema);
+    AppCache.put('redisPort', redisPort);
+    AppCache.put('redisURL', redisURL);
 
     // Initialize the node client SDK automatically
     Parse.initialize(appId, javascriptKey || 'unused', masterKey);

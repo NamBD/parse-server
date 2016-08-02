@@ -1,11 +1,16 @@
 var redis = require('redis');
 
 import { logger } from '../../logger';
+import AppCache from '../../cache';
 
 export class InMemoryCacheAdapter {
 
   constructor(ctx) {
-    this.client = redis.createClient('6379','luck-redis.5jot1u.0001.use1.cache.amazonaws.com');
+
+    var redisPort = AppCache.get('redisPort');
+    var redisURL = AppCache.get('redisURL');
+
+    this.client = redis.createClient(redisPort, redisURL);
     this.client.on('connect', function() {
         logger.info('redis connected');
     });
