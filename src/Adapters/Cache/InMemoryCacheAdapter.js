@@ -2,6 +2,7 @@ var redis = require('redis');
 
 import { logger } from '../../logger';
 import AppCache from '../../cache';
+import { randomString } from '../../cryptoUtils';
 
 export class InMemoryCacheAdapter {
 
@@ -9,6 +10,8 @@ export class InMemoryCacheAdapter {
 
     var redisPort = AppCache.get('redisPort');
     var redisURL = AppCache.get('redisURL');
+
+    this.instanceId = randomString(6);
 
     this.client = redis.createClient(redisPort, redisURL);
     this.client.on('connect', function() {
@@ -20,10 +23,10 @@ export class InMemoryCacheAdapter {
     return new Promise((resolve, reject) => {
       this.client.get(key, function(error, record) {
         if (error || record == null) {
-          logger.error('record not found - Key: ' + key);
+          logger.error('record not found - Key: ' + key + ' from: ' + this.instanceId);
           return resolve(null);
         } else {
-          logger.info('record found - key: ' + key);
+          logger.info('record found - key: ' + key + ' from: ' + this.instanceId);
           return resolve(JSON.parse(record));
         }
       });
@@ -38,7 +41,7 @@ export class InMemoryCacheAdapter {
           if (error) {
             logger.error(error);
           } else {
-            logger.info('Record Set with expire.  Key: ' + key + '  ,   expire: ' + expire);
+            logger.info('Record Set with expire.  Key: ' + key + '  ,   expire: ' + expire + ' from: ' + this.instanceId);
           }
         });
     } else {
@@ -46,7 +49,7 @@ export class InMemoryCacheAdapter {
         if (error) {
           logger.error(error);
         } else {
-          logger.info('Record Set without expire - Key: ' + key);
+          logger.info('Record Set without expire - Key: ' + key + ' from: ' + this.instanceId);
         }
       });
     }
@@ -58,7 +61,7 @@ export class InMemoryCacheAdapter {
       if (error) {
         logger.error(error);
       } else {
-        logger.info('Record Deleted - Key: ' + key);
+        logger.info('Record Deleted - Key: ' + key + ' from: ' + this.instanceId);
       }
     });
     return Promise.resolve();
