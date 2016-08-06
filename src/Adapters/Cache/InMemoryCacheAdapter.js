@@ -2,7 +2,6 @@ var redis = require('redis');
 
 import { logger } from '../../logger';
 import AppCache from '../../cache';
-import { randomString } from '../../cryptoUtils';
 
 export class InMemoryCacheAdapter {
 
@@ -11,7 +10,9 @@ export class InMemoryCacheAdapter {
     var redisPort = AppCache.get('redisPort');
     var redisURL = AppCache.get('redisURL');
 
-    this.instanceId = randomString(6);
+    var id = Math.floor((Math.random() * 10000) + 1);
+
+    this.instanceId = id.toString();
 
     this.client = redis.createClient(redisPort, redisURL);
     this.client.on('connect', function() {
