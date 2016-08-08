@@ -944,9 +944,11 @@ RestWrite.prototype._updateResponseWithData = function(response, data) {
 
     response[fieldName] = responseValue || dataValue;
 
+    console.log('X');
+
     // Strips operations from responses
     if (response[fieldName] && response[fieldName].__op) {
-      console.log("XYZ");
+      console.log('XYZ');
       delete response[fieldName];
       if (clientSupportsDelete && dataValue.__op == 'Delete') {
         response[fieldName] = dataValue;
