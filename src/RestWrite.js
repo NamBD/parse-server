@@ -939,19 +939,18 @@ RestWrite.prototype._updateResponseWithData = function(response, data) {
   }
   let clientSupportsDelete = ClientSDK.supportsForwardDelete(this.clientSDK);
   this.storage.fieldsChangedByTrigger.forEach(fieldName => {
-    let dataValue = data[fieldName];
-    let responseValue = response[fieldName];
+    if (fieldName !== 'user1') {
+      let dataValue = data[fieldName];
+      let responseValue = response[fieldName];
 
-    response[fieldName] = responseValue || dataValue;
+      response[fieldName] = responseValue || dataValue;
 
-    console.log('X');
-
-    // Strips operations from responses
-    if (response[fieldName] && response[fieldName].__op) {
-      console.log('XYZ');
-      delete response[fieldName];
-      if (clientSupportsDelete && dataValue.__op == 'Delete') {
-        response[fieldName] = dataValue;
+      // Strips operations from responses
+      if (response[fieldName] && response[fieldName].__op) {
+        delete response[fieldName];
+        if (clientSupportsDelete && dataValue.__op == 'Delete') {
+          response[fieldName] = dataValue;
+        }
       }
     }
   });
