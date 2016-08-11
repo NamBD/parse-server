@@ -50,8 +50,7 @@ var getAuthForSessionToken = function({ config, sessionToken, installationId } =
     }
 
     var restOptions = {
-      limit: 1,
-      include: 'user'
+      limit: 1
     };
 
     var query = new RestQuery(config, master(config), '_Session', {sessionToken}, restOptions);
