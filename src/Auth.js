@@ -81,6 +81,7 @@ function loadFromDB(config, sessionToken, installationId) {
         'Session token is expired.');
     }
     var obj = results[0]['user'];
+    console.log(obj);
     delete obj.password;
     obj['className'] = '_User';
     config.cacheController.userId.put(sessionToken, obj.objectId);
