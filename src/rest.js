@@ -42,10 +42,6 @@ function del(config, auth, className, objectId, clientSDK) {
 
   enforceRoleSecurity('delete', className, auth);
 
-  if (className === '_User' && objectId) {
-    config.cacheController.userObject.del(objectId);
-  }
-
   var inflatedObject;
 
   return Promise.resolve().then(() => {
@@ -59,7 +55,7 @@ function del(config, auth, className, objectId, clientSDK) {
           response.results[0].className = className;
 
           var cacheAdapter = config.cacheController;
-          cacheAdapter.userId.del(response.results[0].sessionToken);
+          cacheAdapter.user.del(response.results[0].sessionToken);
           inflatedObject = Parse.Object.fromJSON(response.results[0]);
           // Notify LiveQuery server if possible
           config.liveQueryController.onAfterDelete(inflatedObject.className, inflatedObject);

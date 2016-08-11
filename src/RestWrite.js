@@ -351,12 +351,6 @@ RestWrite.prototype.transformUser = function() {
 
   var promise = Promise.resolve();
 
-  if (this.query) {
-    // If we're updating a _User object, we need to clear out the cache for that user. Find all their
-    // session tokens, and remove them from the cache.
-    promise = this.config.cacheController.userObject.del(this.objectId());
-  }
-
   return promise.then(() => {
     // Transform the password
     if (!this.data.password) {

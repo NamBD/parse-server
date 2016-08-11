@@ -46,8 +46,6 @@ export class CacheController extends AdaptableController {
 
     this.role = new SubCache('role', this);
     this.user = new SubCache('user', this);
-    this.userId = new SubCache('userId', this);
-    this.userObject = new SubCache('userObject', this);
   }
 
   get(key) {
