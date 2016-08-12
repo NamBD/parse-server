@@ -104,14 +104,31 @@ function create(config, auth, className, restObject, clientSDK) {
 function update(config, auth, className, objectId, restObject, clientSDK) {
   enforceRoleSecurity('update', className, auth);
 
+  var skipTriggers = false;
+
   return Promise.resolve().then(() => {
 
     if (className === 'match') {
 
-      console.log(restObject);
+      if (auth.isMaster) {
+        console.log("master skip");
+        skipTriggers = true;
+        return Promise.resolve({});
+      }
+
       var matchKeys = Object.keys(restObject);
-      console.log(matchKeys);
-      
+
+      if (matchKeys.length === 1 && matchKeys.indexOf('user1Alert') === 0) {
+        console.log("alert1 skip");
+        skipTriggers = true;
+        return Promise.resolve({});
+      }
+
+      if (matchKeys.length === 1 && matchKeys.indexOf('user2Alert') === 0) {
+        console.log("alert2 skip");
+        skipTriggers = true;
+        return Promise.resolve({});
+      }
     }
 
     if (triggers.getTrigger(className, triggers.Types.beforeSave, config.applicationId) ||
@@ -126,7 +143,7 @@ function update(config, auth, className, objectId, restObject, clientSDK) {
       originalRestObject = response.results[0];
     }
 
-    var write = new RestWrite(config, auth, className, {objectId: objectId}, restObject, originalRestObject, clientSDK);
+    var write = new RestWrite(config, auth, className, {objectId: objectId}, restObject, originalRestObject, clientSDK, skipTriggers);
     return write.execute();
   });
 }

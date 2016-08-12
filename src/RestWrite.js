@@ -24,7 +24,7 @@ import _         from 'lodash';
 // RestWrite will handle objectId, createdAt, and updatedAt for
 // everything. It also knows to use triggers and special modifications
 // for the _User class.
-function RestWrite(config, auth, className, query, data, originalData, clientSDK) {
+function RestWrite(config, auth, className, query, data, originalData, clientSDK, skipTriggers = false) {
   this.config = config;
   this.auth = auth;
   this.className = className;
@@ -51,6 +51,9 @@ function RestWrite(config, auth, className, query, data, originalData, clientSDK
 
   // The timestamp we'll use for this whole operation
   this.updatedAt = Parse._encode(new Date()).iso;
+  this.skipTriggers = skipTriggers;
+  console.log("RESTWrite init");
+  console.log(this.skipTriggers);
 }
 
 // A convenient method to perform all the steps of processing the
@@ -140,6 +143,10 @@ RestWrite.prototype.validateSchema = function() {
 RestWrite.prototype.runBeforeTrigger = function() {
   if (this.response) {
     return;
+  }
+
+  if (this.skipTriggers === true) {
+    return Promise.resolve();
   }
 
   // Avoid doing any setup for triggers if there is no 'beforeSave' trigger for this class.
@@ -853,6 +860,10 @@ RestWrite.prototype.runDatabaseOperation = function() {
 RestWrite.prototype.runAfterTrigger = function() {
   if (!this.response || !this.response.response) {
     return;
+  }
+
+  if (this.skipTriggers === true) {
+    return Promise.resolve();
   }
 
   // Avoid doing any setup for triggers if there is no 'afterSave' trigger for this class.
