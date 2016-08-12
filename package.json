@@ -1,6 +1,6 @@
 {
   "name": "parse-server-luck",
-  "version": "0.1.26",
+  "version": "0.1.27",
   "description": "An express module providing a Parse-compatible API server with some luck",
 
   "main": "lib/index.js",
