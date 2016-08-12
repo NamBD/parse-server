@@ -105,6 +105,15 @@ function update(config, auth, className, objectId, restObject, clientSDK) {
   enforceRoleSecurity('update', className, auth);
 
   return Promise.resolve().then(() => {
+
+    if (className === 'match') {
+
+      console.log(restObject);
+      var matchKeys = Object.keys(restObject);
+      console.log(matchKeys);
+      
+    }
+
     if (triggers.getTrigger(className, triggers.Types.beforeSave, config.applicationId) ||
         triggers.getTrigger(className, triggers.Types.afterSave, config.applicationId) ||
         (config.liveQueryController && config.liveQueryController.hasLiveQuery(className))) {
