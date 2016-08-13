@@ -94,6 +94,7 @@ function del(config, auth, className, objectId, clientSDK) {
 // Returns a promise for a {response, status, location} object.
 function create(config, auth, className, restObject, clientSDK) {
   enforceRoleSecurity('create', className, auth);
+  console.log('CREATE');
   var write = new RestWrite(config, auth, className, null, restObject, null, clientSDK);
   return write.execute();
 }
@@ -103,12 +104,12 @@ function create(config, auth, className, restObject, clientSDK) {
 // Usually, this is just updatedAt.
 function update(config, auth, className, objectId, restObject, clientSDK) {
   enforceRoleSecurity('update', className, auth);
-
+  console.log('UPDATE');
   var skipTriggers = false;
 
   return Promise.resolve().then(() => {
 
-    if (className === 'match') {
+    if (className === 'match' && objectId) {
 
       if (auth.isMaster) {
         console.log("master skip");
@@ -130,6 +131,8 @@ function update(config, auth, className, objectId, restObject, clientSDK) {
         return Promise.resolve({});
       }
     }
+
+    console.log("no skip");
 
     if (triggers.getTrigger(className, triggers.Types.beforeSave, config.applicationId) ||
         triggers.getTrigger(className, triggers.Types.afterSave, config.applicationId) ||

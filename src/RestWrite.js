@@ -54,6 +54,7 @@ function RestWrite(config, auth, className, query, data, originalData, clientSDK
   this.skipTriggers = skipTriggers;
   console.log("RESTWrite init");
   console.log(this.skipTriggers);
+  console.log(originalData);
 }
 
 // A convenient method to perform all the steps of processing the
@@ -145,7 +146,7 @@ RestWrite.prototype.runBeforeTrigger = function() {
     return;
   }
 
-  if (this.skipTriggers === true) {
+  if (this.skipTriggers) {
     return Promise.resolve();
   }
 
@@ -862,7 +863,7 @@ RestWrite.prototype.runAfterTrigger = function() {
     return;
   }
 
-  if (this.skipTriggers === true) {
+  if (this.skipTriggers) {
     return Promise.resolve();
   }
 
