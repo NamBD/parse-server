@@ -863,6 +863,10 @@ RestWrite.prototype.runAfterTrigger = function() {
     return;
   }
 
+  if (this.query && this.query.objectId) {
+    return Promise.resolve();
+  }
+
   if (this.skipTriggers) {
     return Promise.resolve();
   }
