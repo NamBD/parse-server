@@ -54,8 +54,11 @@ function del(config, auth, className, objectId, clientSDK) {
         if (response && response.results && response.results.length) {
           response.results[0].className = className;
 
-          var cacheAdapter = config.cacheController;
-          cacheAdapter.user.del(response.results[0].sessionToken);
+          if (className == '_Session') {
+            var cacheAdapter = config.cacheController;
+            cacheAdapter.user.del(response.results[0].sessionToken);
+          }
+
           inflatedObject = Parse.Object.fromJSON(response.results[0]);
           // Notify LiveQuery server if possible
           config.liveQueryController.onAfterDelete(inflatedObject.className, inflatedObject);
