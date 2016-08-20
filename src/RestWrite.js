@@ -781,9 +781,99 @@ RestWrite.prototype.runDatabaseOperation = function() {
   }
 
   if (this.query) {
-    if ((this.className === '_User' || this.className === '_Installation' || this.className === 'userSettings') && this.data.ACL) {
-      throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Cannot update ACL.');
+    //validate update requests
+    if (this.className === '_User') {
+
+      if (this.data.ACL || this.data.username) {
+        throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Cannot update field.');
+      }
+
+      if (this.data.age) {
+        if (this.data.age < 18) {
+          throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'User is under 18.');
+        }
+      }
+
+      if (this.data.gender) {
+        if (this.data.gender !== 'male' && this.data.gender !== 'female') {
+          throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'User gender format is off.');
+        }
+      }
+
+      if (this.data.interestedIn) {
+        if (this.data.interestedIn !== 'male' && this.data.interestedIn !== 'female') {
+          throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'User gender format is off.');
+        }
+      }
+
+      if (this.data.maxAge) {
+        if (this.data.maxAge > 150 || this.data.maxAge < 22) {
+          throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Max age out of range.');
+        }
+      }
+
+      if (this.data.minAge) {
+        if (this.data.minAge < 18 || this.data.minAge > 46) {
+          throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Min age out of range.');
+        }
+      }
+
+      if (this.data.radius) {
+        if (this.data.radius < 1 || this.data.radius > 50) {
+          throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Radius out of range.');
+        }
+      }
+
+      if (this.data.warningText) {
+        if (this.data.warningText !== 'none') {
+          throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Warning text is wrong.');
+        }
+      }
+
+    } else if (this.className === '_Installation') {
+
+      if (this.data.ACL) {
+        throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Cannot update field.');
+      }
+
+      if (!this.auth.isMaster && this.auth.user && this.auth.user.id && this.data.userId) {
+        if (this.data.userId !== this.auth.user.id && this.data.userId !== 'none') {
+          throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Invalid user ID.');
+        }
+      }
+
+      if (!this.auth.isMaster && this.auth.user && this.auth.user.id && this.data.badge) {
+        if (this.data.badge !== 0) {
+          throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Badge must be 0.');
+        }
+      }
+
+    } else if (this.className === 'userSettings') {
+
+      if (this.data.ACL || this.data.temp || this.data.gender) {
+        throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Cannot update field.');
+      }
+
+      if (this.data.age) {
+        if (this.data.age < 18) {
+          throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'User is under 18.');
+        }
+      }
+
+    } else if (this.className === '_Session') {
+
+      if (!this.auth.isMaster) {
+        if (this.data.sessionToken ||
+          this.data.user ||
+          this.data.createdWith ||
+          this.data.restricted ||
+          this.data.expiresAt ||
+          this.data.installationId) {
+          throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Cannot update field.');
+        }
+      }
     }
+
     // Run an update
     return this.config.database.update(this.className, this.query, this.data, this.runOptions)
     .then(response => {
@@ -792,20 +882,66 @@ RestWrite.prototype.runDatabaseOperation = function() {
       this.response = { response };
     });
   } else {
-    // Set the default ACL for the new _User, _Installation, or userSettings
+    // validate create requests and add default ACLs
     if (this.className === '_User') {
+
       var ACL = {};
       ACL[this.data.objectId] = { read: true, write: true };
       this.data.ACL = ACL;
+
     } else if (this.className === '_Installation') {
+
+      if (!this.auth.user || !this.auth.user.id) {
+        throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Cannot create without user.');
+      }
+
       var ACL = {};
       ACL['*'] = { read: false, write: true };
+      ACL[this.auth.user.id] = { read: false, write: true };
       this.data.ACL = ACL;
+
     } else if (this.className === 'userSettings') {
+
+      if (!this.auth.user || !this.auth.user.id) {
+        throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Cannot create without user.');
+      }
+
+      if (!this.data.temp || !this.data.age || !this.data.gender || !this.data.badge) {
+        throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Missing data.');
+      }
+
+      if (this.auth.user.id !== this.data.temp) {
+        throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'User is not temp.');
+      }
+
+      if (this.data.age < 18) {
+        throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'User is under 18.');
+      }
+
+      if (this.data.gender !== 'male' && this.data.gender !== 'female') {
+        throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'User gender format is off.');
+      }
+
       var ACL = {};
       ACL['*'] = { read: true, write: false };
       ACL[this.auth.user.id] = { read: true, write: true };
       this.data.ACL = ACL;
+
+    } else if (this.className === 'report') {
+
+        if (!this.auth.user || !this.auth.user.id) {
+          throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Cannot create without user.');
+        }
+
+        if (!this.data.senderId || !this.data.isNew || !this.data.chatroomId || !this.data.text || !this.data.userId) {
+          throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Missing data.');
+        }
+
+        if (this.auth.user.id !== this.data.senderId) {
+          throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'User is not sender.');
+        }
+
+        this.data.ACL = {};
     }
 
     // Run a create
