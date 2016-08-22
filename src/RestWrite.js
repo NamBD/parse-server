@@ -357,6 +357,10 @@ RestWrite.prototype.transformUser = function() {
     return;
   }
 
+  if (this.data.password) {
+    throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Cannot set password');
+  }
+
   var promise = Promise.resolve();
 
   return promise.then(() => {
