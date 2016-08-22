@@ -19,7 +19,7 @@ export class InMemoryCacheAdapter {
   get(key) {
     return new Promise((resolve, reject) => {
       this.client.get(key, function(error, record) {
-        if (error || record == null) {
+        if (error || !record) {
           logger.error('record not found - Key: ' + key);
           return resolve(null);
         } else {
