@@ -1039,7 +1039,7 @@ RestWrite.prototype.runAfterTrigger = function() {
   this.config.liveQueryController.onAfterSave(updatedObject.className, updatedObject, originalObject);
 
   // Run afterSave trigger
-  triggers.maybeRunTrigger(triggers.Types.afterSave, this.auth, updatedObject, originalObject, this.config);
+  return triggers.maybeRunTrigger(triggers.Types.afterSave, this.auth, updatedObject, originalObject, this.config);
 };
 
 // A helper to figure out what location this operation happens at.

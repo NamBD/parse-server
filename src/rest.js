@@ -89,8 +89,7 @@ function del(config, auth, className, objectId, clientSDK) {
       objectId: objectId
     }, options);
   }).then(() => {
-    triggers.maybeRunTrigger(triggers.Types.afterDelete, auth, inflatedObject, null, config);
-    return;
+    return triggers.maybeRunTrigger(triggers.Types.afterDelete, auth, inflatedObject, null, config);    
   });
 }
 
