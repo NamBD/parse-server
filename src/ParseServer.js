@@ -54,7 +54,6 @@ import { UsersRouter }          from './Routers/UsersRouter';
 import { PurgeRouter }          from './Routers/PurgeRouter';
 
 import DatabaseController       from './Controllers/DatabaseController';
-const SchemaController = require('./Controllers/SchemaController');
 import ParsePushAdapter         from 'parse-server-push-adapter';
 import MongoStorageAdapter      from './Adapters/Storage/Mongo/MongoStorageAdapter';
 // Mutate the Parse object to add the Cloud Code handlers
@@ -187,14 +186,11 @@ class ParseServer {
     const cacheControllerAdapter = loadAdapter(cacheAdapter, InMemoryCacheAdapter, {appId: appId});
     const cacheController = new CacheController(cacheControllerAdapter, appId);
     const databaseController = new DatabaseController(databaseAdapter);
-    const hooksController = new HooksController(appId, databaseController, webhookKey);
-    const analyticsController = new AnalyticsController(analyticsControllerAdapter);
 
     const analyticsControllerAdapter = loadAdapter(analyticsAdapter, AnalyticsAdapter);
     const analyticsController = new AnalyticsController(analyticsControllerAdapter);
 
     const liveQueryController = new LiveQueryController(liveQuery);
-    //const databaseController = new DatabaseController(databaseAdapter, new SchemaCache(cacheController, schemaCacheTTL));
     const hooksController = new HooksController(appId, databaseController, webhookKey);
 
     const dbInitPromise = databaseController.performInitizalization();
