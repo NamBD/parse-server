@@ -132,10 +132,9 @@ class ParseServer {
       passwordResetSuccess: undefined
     },
     liveQuery = {},
-    sessionLength = 31536000, // 1 Year in seconds
-    expireInactiveSessions = true,
-    verbose = false,
-    revokeSessionOnPasswordReset = true,
+    sessionLength = defaults.sessionLength, // 1 Year in seconds
+    expireInactiveSessions = defaults.expireInactiveSessions,
+    revokeSessionOnPasswordReset = defaults.revokeSessionOnPasswordReset,
     hardSchema,
     redisPort,
     redisURL,
