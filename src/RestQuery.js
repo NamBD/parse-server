@@ -405,6 +405,45 @@ RestQuery.prototype.runFind = function() {
             delete result.authData;
           }
         }
+
+        if (this.auth.isMaster) {
+
+        } else if (!this.auth.user || !this.auth.user.id) {
+          throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Missing data.');
+        } else {
+
+          delete result.warningHistory;
+          delete result.sessionToken;
+          delete result.authData;
+
+          if (result.objectId !== this.auth.user.id) {
+
+            delete result.loveMatches;
+            delete result.blockedCount;
+            delete result.emailVerified;
+            delete result.lustCount;
+            delete result.lastAgeChangeDate;
+            delete result.instructionsViewed;
+            delete result.lustMatches;
+            delete result.warningText;
+            delete result.ACL;
+            delete result.minAge;
+            delete result.interestedIn;
+            delete result.rejectedCount;
+            delete result.radius;
+            delete result.region;
+            delete result.hiddenName;
+            delete result.location;
+            delete result.username;
+            delete result.maxAge;
+            delete result.firstName;
+            delete result.firstMessages;
+            delete result.email;
+            delete result.likes;
+            delete result.loveCount;
+
+          }
+        }
       }
     }
 
