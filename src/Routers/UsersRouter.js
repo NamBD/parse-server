@@ -101,6 +101,7 @@ export class UsersRouter extends ClassesRouter {
         let token = 'r:' + cryptoUtils.newToken();
         user.sessionToken = token;
         delete user.password;
+        delete user.warningHistory;
 
         // Sometimes the authData still has null on that keys
         // https://github.com/ParsePlatform/parse-server/issues/935

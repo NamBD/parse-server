@@ -303,6 +303,7 @@ RestWrite.prototype.handleAuthData = function(authData) {
       if (!this.query) {
         // Login with auth data
         delete results[0].password;
+        delete results[0].warningHistory;
         let userResult = results[0];
 
         // need to set the objectId first otherwise location has trailing undefined
