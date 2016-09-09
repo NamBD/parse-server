@@ -389,6 +389,13 @@ RestQuery.prototype.runFind = function() {
     this.response = {results: []};
     return Promise.resolve();
   }
+
+  if (this.className === '_User' && !this.auth.isMaster) {
+    if (!this.auth.user || !this.auth.user.id) {
+      throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Missing data.');
+    }
+  }
+
   return this.config.database.find(
     this.className, this.restWhere, this.findOptions).then((results) => {
     if (this.className === '_User') {
@@ -406,11 +413,7 @@ RestQuery.prototype.runFind = function() {
           }
         }
 
-        if (this.auth.isMaster) {
-
-        } else if (!this.auth.user || !this.auth.user.id) {
-          throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Missing data.');
-        } else {
+        if (!this.auth.isMaster) {
 
           delete result.warningHistory;
           delete result.sessionToken;
