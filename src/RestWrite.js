@@ -789,7 +789,7 @@ RestWrite.prototype.runDatabaseOperation = function() {
     //validate update requests
     if (this.className === '_User') {
 
-      if (this.data.ACL || this.data.username) {
+      if (this.data.ACL || this.data.username || this.data.warningHistory) {
         throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Cannot update field.');
       }
 
@@ -893,6 +893,8 @@ RestWrite.prototype.runDatabaseOperation = function() {
       var ACL = {};
       ACL[this.data.objectId] = { read: true, write: true };
       this.data.ACL = ACL;
+
+      this.data.warningHistory = [];
 
     } else if (this.className === '_Installation') {
 
