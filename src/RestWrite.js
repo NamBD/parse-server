@@ -853,18 +853,6 @@ RestWrite.prototype.runDatabaseOperation = function() {
         }
       }
 
-    } else if (this.className === 'userSettings') {
-
-      if (this.data.ACL || this.data.temp || this.data.gender) {
-        throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Cannot update field.');
-      }
-
-      if (this.data.age) {
-        if (this.data.age < 18) {
-          throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'User is under 18.');
-        }
-      }
-
     } else if (this.className === '_Session') {
 
       if (!this.auth.isMaster) {
@@ -906,33 +894,6 @@ RestWrite.prototype.runDatabaseOperation = function() {
       var ACL = {};
       ACL['*'] = { read: false, write: true };
       ACL[this.auth.user.id] = { read: false, write: true };
-      this.data.ACL = ACL;
-
-    } else if (this.className === 'userSettings') {
-
-      if (!this.auth.user || !this.auth.user.id) {
-        throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Cannot create without user.');
-      }
-
-      if (!this.data.temp || !this.data.age || !this.data.gender || !this.data.badge) {
-        throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Missing data.');
-      }
-
-      if (this.auth.user.id !== this.data.temp) {
-        throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'User is not temp.');
-      }
-
-      if (this.data.age < 18) {
-        throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'User is under 18.');
-      }
-
-      if (this.data.gender !== 'male' && this.data.gender !== 'female') {
-        throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'User gender format is off.');
-      }
-
-      var ACL = {};
-      ACL['*'] = { read: true, write: false };
-      ACL[this.auth.user.id] = { read: true, write: true };
       this.data.ACL = ACL;
 
     } else if (this.className === 'report') {
