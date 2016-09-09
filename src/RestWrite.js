@@ -891,6 +891,7 @@ RestWrite.prototype.runDatabaseOperation = function() {
     if (this.className === '_User') {
 
       var ACL = {};
+      ACL['*'] = { read: true, write: false };
       ACL[this.data.objectId] = { read: true, write: true };
       this.data.ACL = ACL;
 
