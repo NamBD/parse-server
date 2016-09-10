@@ -525,10 +525,10 @@ function includePath(config, auth, response, path) {
     let className = pointer.className;
     // only include the good pointers
     if (className) {
-      if (className === '_User' && !this.auth.isMaster) {
-        if (!this.auth.user || !this.auth.user.id) {
+      if (className === '_User' && !auth.isMaster) {
+        if (!auth.user || !auth.user.id) {
           throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Missing data.');
-        } else if (this.auth.user.id === pointer.objectId) {
+        } else if (auth.user.id === pointer.objectId) {
           continue;
         }
       }
