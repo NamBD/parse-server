@@ -622,6 +622,9 @@ function replacePointers(object, path, replace) {
 
   if (path.length === 0) {
     if (object.__type === 'Pointer') {
+      if (this.className === 'match' && !replace[object.objectId]) {
+        return object;
+      }
       return replace[object.objectId];
     }
     return object;
