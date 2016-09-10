@@ -496,7 +496,7 @@ RestQuery.prototype.handleInclude = function() {
   }
 
   var pathResponse = includePath(this.config, this.auth,
-                                 this.response, this.include[0]);
+                                 this.response, this.include[0], this.className);
   if (pathResponse.then) {
     return pathResponse.then((newResponse) => {
       this.response = newResponse;
@@ -514,7 +514,7 @@ RestQuery.prototype.handleInclude = function() {
 // Adds included values to the response.
 // Path is a list of field names.
 // Returns a promise for an augmented response.
-function includePath(config, auth, response, path) {
+function includePath(config, auth, response, path, startingClassName) {
   var pointers = findPointers(response.results, path);
   if (pointers.length == 0) {
     return response;
@@ -525,7 +525,7 @@ function includePath(config, auth, response, path) {
     let className = pointer.className;
     // only include the good pointers
     if (className) {
-      if (className === '_User' && !auth.isMaster) {
+      if (startingClassName === 'match' && className === '_User' && !auth.isMaster) {
         if (!auth.user || !auth.user.id) {
           throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Missing data.');
         } else if (auth.user.id === pointer.objectId) {
@@ -563,7 +563,7 @@ function includePath(config, auth, response, path) {
     }, {})
 
     var resp = {
-      results: replacePointers(response.results, path, replace)
+      results: replacePointers(response.results, path, replace, startingClassName, auth)
     };
     if (response.count) {
       resp.count = response.count;
@@ -610,9 +610,9 @@ function findPointers(object, path) {
 // replace is a map from object id -> object.
 // Returns something analogous to object, but with the appropriate
 // pointers inflated.
-function replacePointers(object, path, replace) {
+function replacePointers(object, path, replace, startingClassName, auth) {
   if (object instanceof Array) {
-    return object.map((obj) => replacePointers(obj, path, replace))
+    return object.map((obj) => replacePointers(obj, path, replace, startingClassName, auth))
               .filter((obj) => obj != null && obj != undefined);
   }
 
@@ -622,7 +622,7 @@ function replacePointers(object, path, replace) {
 
   if (path.length === 0) {
     if (object.__type === 'Pointer') {
-      if (this.className === 'match' && !replace[object.objectId]) {
+      if (startingClassName === 'match' && auth.user.id === object.objectId) {
         return object;
       }
       return replace[object.objectId];
@@ -634,7 +634,7 @@ function replacePointers(object, path, replace) {
   if (!subobject) {
     return object;
   }
-  var newsub = replacePointers(subobject, path.slice(1), replace);
+  var newsub = replacePointers(subobject, path.slice(1), replace, startingClassName, auth);
   var answer = {};
   for (var key in object) {
     if (key == path[0]) {
