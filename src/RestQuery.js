@@ -119,7 +119,15 @@ RestQuery.prototype.execute = function() {
   }).then(() => {
     return this.runCount();
   }).then(() => {
-    return this.handleInclude();
+
+    if (this.className === 'match' && this.include.length === 2
+      && this.include.indexOf(['user1']) > -1 && this.include.indexOf(['user2']) > -1) {
+      console.log('special include');
+      return this.handleSpecialMatchInclude();
+    } else {
+      return this.handleInclude();
+    }
+
   }).then(() => {
     return this.response;
   });
@@ -484,6 +492,77 @@ RestQuery.prototype.runCount = function() {
     this.className, this.restWhere, this.findOptions).then((c) => {
       this.response.count = c;
     });
+};
+
+RestQuery.prototype.handleSpecialMatchInclude = function() {
+
+  var pointers = findPointers(this.response.results, ['user1']);
+  var user2Pointers = findPointers(this.response.results, ['user2']);
+
+  pointers = pointers.concat(user2Pointers);
+
+  let pointersHash = {};
+  var objectIds = {};
+  for (var pointer of pointers) {
+    let pointerClassName = pointer.className;
+    // only include the good pointers
+    if (pointerClassName) {
+      if (pointerClassName === '_User') {
+        if (!this.auth.isMaster) {
+          if (!this.auth.user || !this.auth.user.id) {
+            throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Missing data.');
+          } else if (this.auth.user.id === pointer.objectId) {
+            continue;
+          }
+        }
+        pointersHash['_User'] = pointersHash['_User'] || [];
+        pointersHash['_User'].push(pointer.objectId);
+      }
+    }
+  }
+
+  let queryPromises = Object.keys(pointersHash).map((className) => {
+    var where = {'objectId': {'$in': pointersHash[className]}};
+    var query = new RestQuery(this.config, this.auth, className, where);
+    return query.execute().then((results) => {
+      results.className = className;
+      return Promise.resolve(results);
+    })
+  })
+
+  return Promise.all(queryPromises).then((responses) => {
+    var replace = responses.reduce((replace, includeResponse) => {
+      for (var obj of includeResponse.results) {
+        obj.__type = 'Object';
+        obj.className = includeResponse.className;
+
+        if (obj.className == "_User" && !this.auth.isMaster) {
+          delete obj.sessionToken;
+          delete obj.authData;
+        }
+        replace[obj.objectId] = obj;
+      }
+      return replace;
+    }, {})
+
+    var resp = {
+      results: replacePointers(this.response.results, ['user1'], replace, this.className, this.auth)
+    };
+    if (this.response.count) {
+      resp.count = this.response.count;
+    }
+    this.response = resp;
+
+    var resp2 = {
+      results: replacePointers(this.response.results, ['user2'], replace, this.className, this.auth)
+    };
+    if (this.response.count) {
+      resp.count = this.response.count;
+    }
+    this.response = resp2;
+
+    return;
+  });
 };
 
 // Augments this.response with data at the paths provided in this.include.
