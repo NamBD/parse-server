@@ -120,9 +120,10 @@ RestQuery.prototype.execute = function() {
     return this.runCount();
   }).then(() => {
 
-    if (this.className === 'match' && this.include.length === 2
-      && this.include.indexOf(['user1']) > -1 && this.include.indexOf(['user2']) > -1) {
-      console.log('special include');
+    if (this.className === 'match' && this.include.length > 0) {
+    //&& this.include.length === 2
+      //&& this.include.indexOf(['user1']) > -1 && this.include.indexOf(['user2']) > -1)
+      console.log(this.include);
       return this.handleSpecialMatchInclude();
     } else {
       return this.handleInclude();
