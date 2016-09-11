@@ -120,16 +120,16 @@ RestQuery.prototype.execute = function() {
     return this.runCount();
   }).then(() => {
 
-    if (this.className === 'match' && this.include.length > 0) {
-    //&& this.include.length === 2
+    if (this.className === 'match' && this.include.length === 2) {
       //&& this.include.indexOf(['user1']) > -1 && this.include.indexOf(['user2']) > -1)
-      console.log(this.include);
+      console.log('special');
       return this.handleSpecialMatchInclude();
     } else {
       return this.handleInclude();
     }
 
   }).then(() => {
+    console.log(this.response.results);
     return this.response;
   });
 };
@@ -522,6 +522,11 @@ RestQuery.prototype.handleSpecialMatchInclude = function() {
     }
   }
 
+  if (!pointersHash['_User']) {
+    console.log("include not run");
+    return;
+  }
+
   let queryPromises = Object.keys(pointersHash).map((className) => {
     var where = {'objectId': {'$in': pointersHash[className]}};
     var query = new RestQuery(this.config, this.auth, className, where);
@@ -537,7 +542,7 @@ RestQuery.prototype.handleSpecialMatchInclude = function() {
         obj.__type = 'Object';
         obj.className = includeResponse.className;
 
-        if (obj.className == "_User" && !this.auth.isMaster) {
+        if (obj.className === "_User" && !this.auth.isMaster) {
           delete obj.sessionToken;
           delete obj.authData;
         }
