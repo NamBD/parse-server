@@ -419,33 +419,30 @@ RestQuery.prototype.runFind = function() {
           delete result.sessionToken;
           delete result.authData;
 
-          if (result.objectId !== this.auth.user.id) {
+          delete result.loveMatches;
+          delete result.blockedCount;
+          delete result.emailVerified;
+          delete result.lustCount;
+          delete result.lastAgeChangeDate;
+          delete result.instructionsViewed;
+          delete result.lustMatches;
+          delete result.warningText;
+          delete result.ACL;
+          delete result.minAge;
+          delete result.interestedIn;
+          delete result.rejectedCount;
+          delete result.radius;
+          delete result.region;
+          delete result.hiddenName;
+          delete result.location;
+          delete result.username;
+          delete result.maxAge;
+          delete result.firstName;
+          delete result.firstMessages;
+          delete result.email;
+          delete result.likes;
+          delete result.loveCount;
 
-            delete result.loveMatches;
-            delete result.blockedCount;
-            delete result.emailVerified;
-            delete result.lustCount;
-            delete result.lastAgeChangeDate;
-            delete result.instructionsViewed;
-            delete result.lustMatches;
-            delete result.warningText;
-            delete result.ACL;
-            delete result.minAge;
-            delete result.interestedIn;
-            delete result.rejectedCount;
-            delete result.radius;
-            delete result.region;
-            delete result.hiddenName;
-            delete result.location;
-            delete result.username;
-            delete result.maxAge;
-            delete result.firstName;
-            delete result.firstMessages;
-            delete result.email;
-            delete result.likes;
-            delete result.loveCount;
-
-          }
         }
       }
     }
