@@ -304,6 +304,13 @@ RestWrite.prototype.handleAuthData = function(authData) {
         // Login with auth data
         delete results[0].password;
         delete results[0].warningHistory;
+        delete results[0].lustCount;
+        delete results[0].loveCount;
+        delete results[0].rejectedCount;
+        delete results[0].blockedCount;
+        delete results[0].firstMessages;
+        delete results[0].likes;
+
         let userResult = results[0];
 
         // need to set the objectId first otherwise location has trailing undefined

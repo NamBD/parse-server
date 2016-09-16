@@ -102,6 +102,12 @@ export class UsersRouter extends ClassesRouter {
         user.sessionToken = token;
         delete user.password;
         delete user.warningHistory;
+        delete user.lustCount;
+        delete user.loveCount;
+        delete user.rejectedCount;
+        delete user.blockedCount;
+        delete user.firstMessages;
+        delete user.likes;
 
         // Sometimes the authData still has null on that keys
         // https://github.com/ParsePlatform/parse-server/issues/935
