@@ -106,6 +106,8 @@ export class UsersRouter extends ClassesRouter {
         delete user.loveCount;
         delete user.rejectedCount;
         delete user.blockedCount;
+        delete user.lustMatches;
+        delete user.loveMatches;
         delete user.firstMessages;
         delete user.likes;
 

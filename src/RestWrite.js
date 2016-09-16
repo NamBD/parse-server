@@ -308,6 +308,8 @@ RestWrite.prototype.handleAuthData = function(authData) {
         delete results[0].loveCount;
         delete results[0].rejectedCount;
         delete results[0].blockedCount;
+        delete results[0].lustMatches;
+        delete results[0].loveMatches;
         delete results[0].firstMessages;
         delete results[0].likes;
 
