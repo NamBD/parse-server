@@ -884,6 +884,12 @@ RestWrite.prototype.runDatabaseOperation = function() {
       this.data.ACL = ACL;
 
       this.data.warningHistory = [];
+      this.data.lustCount = 0;
+      this.data.loveCount = 0;
+      this.data.rejectedCount = 0;
+      this.data.blockedCount = 0;
+      this.data.firstMessages = 0;
+      this.data.likes = 0;
 
     } else if (this.className === '_Installation') {
 
