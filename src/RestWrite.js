@@ -897,6 +897,8 @@ RestWrite.prototype.runDatabaseOperation = function() {
       this.data.loveCount = 0;
       this.data.rejectedCount = 0;
       this.data.blockedCount = 0;
+      this.data.lustMatches = 0;
+      this.data.loveMatches = 0;
       this.data.firstMessages = 0;
       this.data.likes = 0;
 
