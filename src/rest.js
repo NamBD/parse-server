@@ -89,7 +89,7 @@ function del(config, auth, className, objectId, clientSDK) {
       objectId: objectId
     }, options);
   }).then(() => {
-    return triggers.maybeRunTrigger(triggers.Types.afterDelete, auth, inflatedObject, null, config);    
+    return triggers.maybeRunTrigger(triggers.Types.afterDelete, auth, inflatedObject, null, config);
   });
 }
 
@@ -111,13 +111,15 @@ function update(config, auth, className, objectId, restObject, clientSDK) {
 
   return Promise.resolve().then(() => {
 
-    if (className === 'match' && objectId) {
+    if (className === 'swipe' && objectId && auth.isMaster) {
 
-      if (auth.isMaster) {
         console.log("master skip");
         skipTriggers = true;
         return Promise.resolve({});
-      }
+      
+    }
+
+    if (className === 'match' && objectId) {
 
       var matchKeys = Object.keys(restObject);
 
