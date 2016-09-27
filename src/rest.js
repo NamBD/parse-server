@@ -116,7 +116,7 @@ function update(config, auth, className, objectId, restObject, clientSDK) {
         console.log("master skip");
         skipTriggers = true;
         return Promise.resolve({});
-      
+
     }
 
     if (className === 'match' && objectId) {
@@ -158,11 +158,33 @@ function update(config, auth, className, objectId, restObject, clientSDK) {
 // Disallowing access to the _Role collection except by master key
 function enforceRoleSecurity(method, className, auth) {
   if (className === '_Installation' && !auth.isMaster) {
-    if (method === 'delete' || method === 'find') {
+    if (method === 'delete' || method === 'find' || method === 'get') {
       let error = `Clients aren't allowed to perform the ${method} operation on the installation collection.`
       throw new Parse.Error(Parse.Error.OPERATION_FORBIDDEN, error);
     }
   }
+
+  if (className === '_User' && !auth.isMaster) {
+    if (method === 'find' || method === 'get') {
+      let error = `Clients aren't allowed to perform the ${method} operation on the user collection.`
+      throw new Parse.Error(Parse.Error.OPERATION_FORBIDDEN, error);
+    }
+  }
+
+  if (className === 'match' && !auth.isMaster) {
+    if (method === 'create' || method === 'delete') {
+      let error = `Clients aren't allowed to perform the ${method} operation on the match collection.`
+      throw new Parse.Error(Parse.Error.OPERATION_FORBIDDEN, error);
+    }
+  }
+
+  if (className === 'swipe' && !auth.isMaster) {
+    if (method === 'delete' || method === 'find' || method === 'get' || method === 'update') {
+      let error = `Clients aren't allowed to perform the ${method} operation on the swipe collection.`
+      throw new Parse.Error(Parse.Error.OPERATION_FORBIDDEN, error);
+    }
+  }
+
 }
 
 module.exports = {
