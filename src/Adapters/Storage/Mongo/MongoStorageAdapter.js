@@ -273,7 +273,7 @@ export class MongoStorageAdapter {
   // Remove all objects that match the given Parse Query.
   // If no objects match, reject with OBJECT_NOT_FOUND. If objects are found and deleted, resolve with undefined.
   // If there is some other error, reject with INTERNAL_SERVER_ERROR.
-  deleteObjectsByQuery(className, schema, query) {
+  deleteObjectsByQuery(className, schema, query, isUserDelete = false) {
     schema = convertParseSchemaToMongoSchema(schema);
     return this._adaptiveCollection(className)
     .then(collection => {
@@ -281,7 +281,7 @@ export class MongoStorageAdapter {
       return collection.deleteMany(mongoWhere)
     })
     .then(({ result }) => {
-      if (result.n === 0) {
+      if (result.n === 0 && !isUserDelete) {
         throw new Parse.Error(Parse.Error.OBJECT_NOT_FOUND, 'Object not found.');
       }
       return Promise.resolve();

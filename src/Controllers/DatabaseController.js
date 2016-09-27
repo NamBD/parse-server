@@ -101,7 +101,7 @@ DatabaseController.prototype.purgeCollection = function(className) {
 DatabaseController.prototype.deleteManyByQuery = function(className, query) {
   return this.loadSchema()
   .then(schemaController => schemaController.getOneSchema(className))
-  .then(schema => this.adapter.deleteObjectsByQuery(className, schema, query));
+  .then(schema => this.adapter.deleteObjectsByQuery(className, schema, query, true));
 };
 
 DatabaseController.prototype.validateClassName = function(className) {
