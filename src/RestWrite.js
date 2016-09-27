@@ -802,6 +802,10 @@ RestWrite.prototype.runDatabaseOperation = function() {
         throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Cannot update field.');
       }
 
+      if (this.data.likes && !this.auth.isMaster) {
+        throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Cannot update field.');
+      }
+
       if (this.data.age) {
         if (this.data.age < 18) {
           throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'User is under 18.');
