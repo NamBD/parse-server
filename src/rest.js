@@ -45,6 +45,30 @@ function del(config, auth, className, objectId, clientSDK) {
   var inflatedObject;
 
   return Promise.resolve().then(() => {
+
+    if (className !== '_User') {
+      return;
+    }
+
+    let orQueries = [];
+    orQueries.push({user1Id: objectId});
+    orQueries.push({user2Id: objectId});
+
+    return config.database.deleteManyByQuery('swipe', {'$or': orQueries});
+
+  }).then(() => {
+
+    if (className !== '_User') {
+      return;
+    }
+
+    let orQueries = [];
+    orQueries.push({user1Id: objectId});
+    orQueries.push({user2Id: objectId});
+
+    return config.database.deleteManyByQuery('match', {'$or': orQueries});
+
+  }).then(() => {
     if (triggers.getTrigger(className, triggers.Types.beforeDelete, config.applicationId) ||
         triggers.getTrigger(className, triggers.Types.afterDelete, config.applicationId) ||
         (config.liveQueryController && config.liveQueryController.hasLiveQuery(className)) ||

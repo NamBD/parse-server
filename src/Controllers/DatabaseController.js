@@ -98,6 +98,12 @@ DatabaseController.prototype.purgeCollection = function(className) {
   .then(schema => this.adapter.deleteObjectsByQuery(className, schema, {}));
 };
 
+DatabaseController.prototype.deleteManyByQuery = function(className, query) {
+  return this.loadSchema()
+  .then(schemaController => schemaController.getOneSchema(className))
+  .then(schema => this.adapter.deleteObjectsByQuery(className, schema, query));
+};
+
 DatabaseController.prototype.validateClassName = function(className) {
   if (!SchemaController.classNameIsValid(className)) {
     return Promise.reject(new Parse.Error(Parse.Error.INVALID_CLASS_NAME, 'invalid className: ' + className));
