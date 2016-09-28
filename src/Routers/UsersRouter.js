@@ -60,6 +60,18 @@ export class UsersRouter extends ClassesRouter {
           let user = response.results[0].user;
           // Send token back on the login, because SDKs expect that.
           user.sessionToken = sessionToken;
+
+          delete user.password;
+          delete user.warningHistory;
+          delete user.lustCount;
+          delete user.loveCount;
+          delete user.rejectedCount;
+          delete user.blockedCount;
+          delete user.lustMatches;
+          delete user.loveMatches;
+          delete user.firstMessages;
+          delete user.likes;
+
           return { response: user };
         }
       });
