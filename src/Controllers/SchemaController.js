@@ -540,6 +540,7 @@ export default class SchemaController {
             `schema mismatch for ${className}.${fieldName}; expected ${expectedType.type || expectedType} but got ${type.type}`
           );
         }
+        return this;
       }
 
       return this._dbAdapter.addFieldIfNotExists(className, fieldName, type).then(() => {
