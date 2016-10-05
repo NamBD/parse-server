@@ -505,8 +505,10 @@ RestQuery.prototype.handleSpecialMatchInclude = function() {
   pointers = pointers.concat(user2Pointers);
 
   let pointersHash = {};
-  var objectIds = {};
   for (var pointer of pointers) {
+    if (!pointer) {
+      continue;
+    }
     let pointerClassName = pointer.className;
     // only include the good pointers
     if (pointerClassName) {
@@ -518,8 +520,8 @@ RestQuery.prototype.handleSpecialMatchInclude = function() {
             continue;
           }
         }
-        pointersHash['_User'] = pointersHash['_User'] || [];
-        pointersHash['_User'].push(pointer.objectId);
+        pointersHash['_User'] = pointersHash['_User'] || new Set();
+        pointersHash['_User'].add(pointer.objectId);
       }
     }
   }
@@ -529,10 +531,13 @@ RestQuery.prototype.handleSpecialMatchInclude = function() {
     return;
   }
 
+  let includeRestOptions = {};
+  includeRestOptions.keys = 'gender,badge,age,pushActive,bio,image0,image1,image2,image3,image4';
+
   let queryPromises = Object.keys(pointersHash).map((className) => {
-    var where = {'objectId': {'$in': pointersHash[className]}};
-    var query = new RestQuery(this.config, this.auth, className, where);
-    return query.execute().then((results) => {
+    var where = {'objectId': {'$in': Array.from(pointersHash[className])}};
+    var query = new RestQuery(this.config, this.auth, className, where, includeRestOptions);
+    return query.execute({op: 'get'}).then((results) => {
       results.className = className;
       return Promise.resolve(results);
     })
