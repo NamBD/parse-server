@@ -468,6 +468,7 @@ RestQuery.prototype.runFind = function(options = {}) {
           delete result.email;
           delete result.likes;
           delete result.loveCount;
+          delete result.showCrossMatches;
 
         }
       }
