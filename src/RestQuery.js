@@ -59,8 +59,8 @@ function RestQuery(config, auth, className, restWhere = {}, restOptions = {}, cl
       this.keys = new Set(restOptions.keys.split(','));
         // Add the default
       this.keys.add('objectId');
-      this.keys.add('createdAt');
-      this.keys.add('updatedAt');
+      //this.keys.add('createdAt');
+      //this.keys.add('updatedAt');
       break;
     case 'count':
       this.doCount = true;
@@ -351,6 +351,7 @@ const transformDontSelect = (dontSelectObject, key, objects) => {
   for (var result of objects) {
     values.push(result[key]);
   }
+  console.log(values);
   delete dontSelectObject['$dontSelect'];
   if (Array.isArray(dontSelectObject['$nin'])) {
     dontSelectObject['$nin'] = dontSelectObject['$nin'].concat(values);
@@ -381,7 +382,8 @@ RestQuery.prototype.replaceDontSelect = function() {
                           'improper usage of $dontSelect');
   }
   let additionalOptions = {
-    redirectClassNameForKey: dontSelectValue.query.redirectClassNameForKey
+    redirectClassNameForKey: dontSelectValue.query.redirectClassNameForKey,
+    keys: dontSelectValue.key
   };
 
   var subquery = new RestQuery(
