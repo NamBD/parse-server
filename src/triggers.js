@@ -7,12 +7,14 @@ export const Types = {
   beforeSave: 'beforeSave',
   afterSave: 'afterSave',
   beforeDelete: 'beforeDelete',
-  afterDelete: 'afterDelete'
+  afterDelete: 'afterDelete',
+  beforeFind: 'beforeFind'
 };
 
 const baseStore = function() {
   let Validators = {};
   let Functions = {};
+  let Jobs = {};
   let Triggers = Object.keys(Types).reduce(function(base, key){
     base[key] = {};
     return base;
@@ -20,6 +22,7 @@ const baseStore = function() {
 
   return Object.freeze({
     Functions,
+    Jobs,
     Validators,
     Triggers
   });
@@ -34,6 +37,12 @@ export function addFunction(functionName, handler, validationHandler, applicatio
   _triggerStore[applicationId].Validators[functionName] = validationHandler;
 }
 
+export function addJob(jobName, handler, applicationId) {
+  applicationId = applicationId || Parse.applicationId;
+  _triggerStore[applicationId] =  _triggerStore[applicationId] || baseStore();
+  _triggerStore[applicationId].Jobs[jobName] = handler;
+}
+
 export function addTrigger(type, className, handler, applicationId) {
   applicationId = applicationId || Parse.applicationId;
   _triggerStore[applicationId] =  _triggerStore[applicationId] || baseStore();
@@ -43,6 +52,11 @@ export function addTrigger(type, className, handler, applicationId) {
 export function removeFunction(functionName, applicationId) {
    applicationId = applicationId || Parse.applicationId;
    delete _triggerStore[applicationId].Functions[functionName]
+}
+
+export function removeJob(jobName, applicationId) {
+   applicationId = applicationId || Parse.applicationId;
+   delete _triggerStore[applicationId].Jobs[jobName]
 }
 
 export function removeTrigger(type, className, applicationId) {
@@ -89,6 +103,23 @@ export function getFunction(functionName, applicationId) {
   return undefined;
 }
 
+export function getJob(jobName, applicationId) {
+  var manager = _triggerStore[applicationId];
+  if (manager && manager.Jobs) {
+    return manager.Jobs[jobName];
+  };
+  return undefined;
+}
+
+export function getJobs(applicationId) {
+  var manager = _triggerStore[applicationId];
+  if (manager && manager.Jobs) {
+    return manager.Jobs;
+  };
+  return undefined;
+}
+
+
 export function getValidator(functionName, applicationId) {
   var manager = _triggerStore[applicationId];
   if (manager && manager.Validators) {
@@ -108,6 +139,29 @@ export function getRequestObject(triggerType, auth, parseObject, originalParseOb
   if (originalParseObject) {
     request.original = originalParseObject;
   }
+
+  if (!auth) {
+    return request;
+  }
+  if (auth.isMaster) {
+    request['master'] = true;
+  }
+  if (auth.user) {
+    request['user'] = auth.user;
+  }
+  if (auth.installationId) {
+    request['installationId'] = auth.installationId;
+  }
+  return request;
+}
+
+export function getRequestQueryObject(triggerType, auth, query, config) {
+  var request = {
+    triggerName: triggerType,
+    query: query,
+    master: false,
+    log: config.loggerController
+  };
 
   if (!auth) {
     return request;
@@ -186,6 +240,66 @@ function logTriggerErrorBeforeHook(triggerType, className, input, auth, error) {
   });
 }
 
+export function maybeRunQueryTrigger(triggerType, className, restWhere, restOptions, config, auth) {
+  let trigger = getTrigger(className, triggerType, config.applicationId);
+  if (!trigger) {
+    return Promise.resolve({
+      restWhere,
+      restOptions
+    });
+  }
+
+  let parseQuery = new Parse.Query(className);
+  if (restWhere) {
+      parseQuery._where = restWhere;
+  }
+  if (restOptions) {
+    if (restOptions.include && restOptions.include.length > 0) {
+      parseQuery._include = restOptions.include.split(',');
+    }
+    if (restOptions.skip) {
+        parseQuery._skip = restOptions.skip;
+    }
+    if (restOptions.limit) {
+        parseQuery._limit = restOptions.limit;
+    }
+  }
+  let requestObject = getRequestQueryObject(triggerType, auth, parseQuery, config);
+  return Promise.resolve().then(() => {
+    return trigger(requestObject);
+  }).then((result) => {
+    let queryResult = parseQuery;
+    if (result && result instanceof Parse.Query) {
+      queryResult = result;
+    }
+    let jsonQuery = queryResult.toJSON();
+    if (jsonQuery.where) {
+      restWhere = jsonQuery.where;
+    }
+    if (jsonQuery.limit) {
+      restOptions = restOptions || {};
+      restOptions.limit = jsonQuery.limit;
+    }
+    if (jsonQuery.skip) {
+      restOptions = restOptions || {};
+      restOptions.skip = jsonQuery.skip;
+    }
+    if (jsonQuery.include) {
+      restOptions = restOptions || {};
+      restOptions.include = jsonQuery.include;
+    }
+    return {
+      restWhere,
+      restOptions
+    };
+  }, (err) => {
+    if (typeof err === 'string') {
+      throw new Parse.Error(1, err);
+    } else {
+      throw err;
+    }
+  });
+}
 
 // To be used as part of the promise chain when saving/deleting an object
 // Will resolve successfully if no trigger is configured

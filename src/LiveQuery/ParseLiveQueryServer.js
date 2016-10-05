@@ -8,6 +8,7 @@ import RequestSchema from './RequestSchema';
 import { matchesQuery, queryHash } from './QueryTools';
 import { ParsePubSub } from './ParsePubSub';
 import { SessionTokenCache } from './SessionTokenCache';
+import _ from 'lodash';
 
 class ParseLiveQueryServer {
   clientId: number;
@@ -62,7 +63,13 @@ class ParseLiveQueryServer {
     // to the subscribers and the handler will be called.
     this.subscriber.on('message', (channel, messageStr) => {
       logger.verbose('Subscribe messsage %j', messageStr);
-      let message = JSON.parse(messageStr);
+      let message;
+      try {
+        message = JSON.parse(messageStr);
+      } catch(e) {
+        logger.error('unable to parse message', messageStr, e);
+        return;
+      }
       this._inflateParseObject(message);
       if (channel === 'afterSave') {
         this._onAfterSave(message);
@@ -108,7 +115,7 @@ class ParseLiveQueryServer {
 
     let classSubscriptions = this.subscriptions.get(className);
     if (typeof classSubscriptions === 'undefined') {
-      logger.error('Can not find subscriptions under this class ' + className);
+      logger.debug('Can not find subscriptions under this class ' + className);
       return;
     }
     for (let subscription of classSubscriptions.values()) {
@@ -116,7 +123,7 @@ class ParseLiveQueryServer {
       if (!isSubscriptionMatched) {
         continue;
       }
-      for (let [clientId, requestIds] of subscription.clientRequestIds.entries()) {
+      for (let [clientId, requestIds] of _.entries(subscription.clientRequestIds)) {
         let client = this.clients.get(clientId);
         if (typeof client === 'undefined') {
           continue;
@@ -153,13 +160,13 @@ class ParseLiveQueryServer {
 
     let classSubscriptions = this.subscriptions.get(className);
     if (typeof classSubscriptions === 'undefined') {
-      logger.error('Can not find subscriptions under this class ' + className);
+      logger.debug('Can not find subscriptions under this class ' + className);
       return;
     }
     for (let subscription of classSubscriptions.values()) {
       let isOriginalSubscriptionMatched = this._matchesSubscription(originalParseObject, subscription);
       let isCurrentSubscriptionMatched = this._matchesSubscription(currentParseObject, subscription);
-      for (let [clientId, requestIds] of subscription.clientRequestIds.entries()) {
+      for (let [clientId, requestIds] of _.entries(subscription.clientRequestIds)) {
         let client = this.clients.get(clientId);
         if (typeof client === 'undefined') {
           continue;
@@ -229,7 +236,12 @@ class ParseLiveQueryServer {
   _onConnect(parseWebsocket: any): void {
     parseWebsocket.on('message', (request) => {
       if (typeof request === 'string') {
-        request = JSON.parse(request);
+        try {
+          request = JSON.parse(request);
+        } catch(e) {
+          logger.error('unable to parse request', request, e);
+          return;
+        }
       }
       logger.verbose('Request: %j', request);
 
@@ -269,7 +281,7 @@ class ParseLiveQueryServer {
       this.clients.delete(clientId);
 
       // Delete client from subscriptions
-      for (let [requestId, subscriptionInfo] of client.subscriptionInfos.entries()) {
+      for (let [requestId, subscriptionInfo] of _.entries(client.subscriptionInfos)) {
         let subscription = subscriptionInfo.subscription;
         subscription.deleteClientSubscription(clientId, requestId);
 

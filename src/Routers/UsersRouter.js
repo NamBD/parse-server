@@ -2,6 +2,7 @@
 
 import deepcopy       from 'deepcopy';
 import Config         from '../Config';
+import AccountLockout from '../AccountLockout';
 import ClassesRouter  from './ClassesRouter';
 import PromiseRouter  from '../PromiseRouter';
 import rest           from '../rest';
@@ -18,9 +19,6 @@ export class UsersRouter extends ClassesRouter {
   }
 
   handleGet(req) {
-    if (req.params.objectId === 'me') {
-      return this.handleMe(req);
-    }
     req.params.className = '_User';
     return super.handleGet(req);
   }
@@ -90,8 +88,13 @@ export class UsersRouter extends ClassesRouter {
     if (!req.body.password) {
       throw new Parse.Error(Parse.Error.PASSWORD_MISSING, 'password is required.');
     }
+    if (typeof req.body.username !== 'string' || typeof req.body.password !== 'string') {
+      throw new Parse.Error(Parse.Error.OBJECT_NOT_FOUND, 'Invalid username/password.');
+    }
 
     let user;
+    let isValidPassword = false;
+
     return req.config.database.find('_User', { username: req.body.username })
       .then((results) => {
         if (!results.length) {
@@ -102,11 +105,15 @@ export class UsersRouter extends ClassesRouter {
         if (req.config.verifyUserEmails && req.config.preventLoginWithUnverifiedEmail && !user.emailVerified) {
           throw new Parse.Error(Parse.Error.EMAIL_NOT_FOUND, 'User email is not verified.');
         }
-
         return passwordCrypto.compare(req.body.password, user.password);
-      }).then((correct) => {
-
-        if (!correct) {
+      })
+      .then((correct) => {
+        isValidPassword = correct;
+        let accountLockoutPolicy = new AccountLockout(user, req.config);
+        return accountLockoutPolicy.handleLoginAttempt(isValidPassword);
+      })
+      .then(() => {
+        if (!isValidPassword) {
           throw new Parse.Error(Parse.Error.OBJECT_NOT_FOUND, 'Invalid username/password.');
         }
 
@@ -204,6 +211,9 @@ export class UsersRouter extends ClassesRouter {
     if (!email) {
       throw new Parse.Error(Parse.Error.EMAIL_MISSING, "you must provide an email");
     }
+    if (typeof email !== 'string') {
+      throw new Parse.Error(Parse.Error.INVALID_EMAIL_ADDRESS, 'you must provide a valid email string');
+    }
     let userController = req.config.userController;
     return userController.sendPasswordResetEmail(email).then(token => {
        return Promise.resolve({
@@ -222,6 +232,7 @@ export class UsersRouter extends ClassesRouter {
   mountRoutes() {
     this.route('GET', '/users', req => { return this.handleFind(req); });
     this.route('POST', '/users', req => { return this.handleCreate(req); });
+    this.route('GET', '/users/me', req => { return this.handleMe(req); });
     this.route('GET', '/users/:objectId', req => { return this.handleGet(req); });
     this.route('PUT', '/users/:objectId', req => { return this.handleUpdate(req); });
     this.route('DELETE', '/users/:objectId', req => { return this.handleDelete(req); });

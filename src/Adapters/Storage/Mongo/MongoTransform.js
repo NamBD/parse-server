@@ -11,8 +11,10 @@ const transformKey = (className, fieldName, schema) => {
     case 'updatedAt': return '_updated_at';
     case 'sessionToken': return '_session_token';
   }
-
+  
   if (schema.fields[fieldName] && schema.fields[fieldName].__type == 'Pointer') {
+    fieldName = '_p_' + fieldName;
+  } else if (schema.fields[fieldName] && schema.fields[fieldName].type == 'Pointer') {
     fieldName = '_p_' + fieldName;
   }
 
@@ -57,10 +59,16 @@ const transformKeyValueForUpdate = (className, restKey, restValue, parseFormatSc
     key = '_email_verify_token_expires_at';
     timeField = true;
     break;
+  case '_account_lockout_expires_at':
+    key = '_account_lockout_expires_at';
+    timeField = true;
+    break;
+  case '_failed_login_count':
+    key = '_failed_login_count';
+    break;
   case '_rperm':
   case '_wperm':
     return {key: key, value: restValue};
-    break;
   }
 
   if ((parseFormatSchema.fields[key] && parseFormatSchema.fields[key].type === 'Pointer') || (!parseFormatSchema.fields[key] && restValue && restValue.__type == 'Pointer')) {
@@ -93,7 +101,7 @@ const transformKeyValueForUpdate = (className, restKey, restValue, parseFormatSc
 }
 
 const transformInteriorValue = restValue => {
-  if (restValue !== null && typeof restValue === 'object' && Object.keys(restValue).some(key => key.includes('$') || key.includes('.'))) {
+  if (restValue !== null && typeof restValue === 'object' && Object.keys(restValue).some(key => key.includes('$')|| key.includes('.'))) {
     throw new Parse.Error(Parse.Error.INVALID_NESTED_KEY, "Nested keys should not contain the '$' or '.' characters");
   }
   // Handle atomic values
@@ -155,6 +163,13 @@ function transformQueryKeyValue(className, key, value, schema) {
     }
     return {key: '_id', value}
   }
+  case '_account_lockout_expires_at':
+    if (valueAsDate(value)) {
+      return {key: '_account_lockout_expires_at', value: valueAsDate(value)}
+    }
+    break;
+  case '_failed_login_count':
+    return {key, value};
   case 'sessionToken': return {key: '_session_token', value}
   case '_rperm':
   case '_wperm':
@@ -231,6 +246,11 @@ const parseObjectKeyValueToMongoObjectKeyValue = (restKey, restValue, schema) =>
     transformedValue = transformTopLevelAtom(restValue);
     coercedToDate = typeof transformedValue === 'string' ? new Date(transformedValue) : transformedValue
     return {key: '_email_verify_token_expires_at', value: coercedToDate};
+  case '_account_lockout_expires_at':
+    transformedValue = transformTopLevelAtom(restValue);
+    coercedToDate = typeof transformedValue === 'string' ? new Date(transformedValue) : transformedValue
+    return {key: '_account_lockout_expires_at', value: coercedToDate};
+  case '_failed_login_count':
   case '_rperm':
   case '_wperm':
   case '_email_verify_token':
@@ -312,8 +332,8 @@ const parseObjectToMongoObjectForCreate = (className, restCreate, schema) => {
 // Main exposed method to help update old objects.
 const transformUpdate = (className, restUpdate, parseFormatSchema) => {
   let mongoUpdate = {};
-  let acl = addLegacyACL(restUpdate)._acl;
-  if (acl) {
+  let acl = addLegacyACL(restUpdate);
+  if (acl._rperm || acl._wperm || acl._acl) {
     mongoUpdate.$set = {};
     if (acl._rperm) {
       mongoUpdate.$set._rperm = acl._rperm;
@@ -473,7 +493,7 @@ function transformConstraint(constraint, inArray) {
     case '$eq':
       answer[key] = inArray ? transformInteriorAtom(constraint[key]) : transformTopLevelAtom(constraint[key]);
       if (answer[key] === CannotTransform) {
-        throw new Parse.Error(Parse.Error.INVALID_JSON, `bad atom: ${atom}`);
+        throw new Parse.Error(Parse.Error.INVALID_JSON, `bad atom: ${constraint[key]}`);
       }
       break;
 
@@ -486,7 +506,7 @@ function transformConstraint(constraint, inArray) {
       answer[key] = arr.map(value => {
         let result = inArray ? transformInteriorAtom(value) : transformTopLevelAtom(value);
         if (result === CannotTransform) {
-          throw new Parse.Error(Parse.Error.INVALID_JSON, `bad atom: ${atom}`);
+          throw new Parse.Error(Parse.Error.INVALID_JSON, `bad atom: ${value}`);
         }
         return result;
       });
@@ -730,6 +750,8 @@ const mongoObjectToParseObject = (className, mongoObject, schema) => {
       case '_perishable_token':
       case '_tombstone':
       case '_email_verify_token_expires_at':
+      case '_account_lockout_expires_at':
+      case '_failed_login_count':
         // Those keys will be deleted if needed in the DB Controller
         restObject[key] = mongoObject[key];
         break;

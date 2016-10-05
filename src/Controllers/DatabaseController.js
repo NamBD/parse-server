@@ -43,7 +43,12 @@ const transformObjectACL = ({ ACL, ...result }) => {
   return result;
 }
 
-const specialQuerykeys = ['$and', '$or', '_rperm', '_wperm', '_perishable_token', '_email_verify_token', '_email_verify_token_expires_at'];
+const specialQuerykeys = ['$and', '$or', '_rperm', '_wperm', '_perishable_token', '_email_verify_token', '_email_verify_token_expires_at', '_account_lockout_expires_at', '_failed_login_count'];
+
+const isSpecialQueryKey = key => {
+  return specialQuerykeys.indexOf(key) >= 0;
+}
+
 const validateQuery = query => {
   if (query.ACL) {
     throw new Parse.Error(Parse.Error.INVALID_QUERY, 'Cannot query on ACL.');
@@ -73,7 +78,7 @@ const validateQuery = query => {
         }
       }
     }
-    if (!specialQuerykeys.includes(key) && !key.match(/^[a-zA-Z][a-zA-Z0-9_\.]*$/)) {
+    if (!isSpecialQueryKey(key) && !key.match(/^[a-zA-Z][a-zA-Z0-9_\.]*$/)) {
       throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, `Invalid key name: ${key}`);
     }
   });
@@ -172,6 +177,8 @@ const filterSensitiveData = (isMaster, aclGroup, className, object) => {
   delete object._perishable_token;
   delete object._tombstone;
   delete object._email_verify_token_expires_at;
+  delete object._failed_login_count;
+  delete object._account_lockout_expires_at;
 
   if ((aclGroup.indexOf(object.objectId) > -1)) {
     return object;
@@ -188,7 +195,12 @@ const filterSensitiveData = (isMaster, aclGroup, className, object) => {
 //   acl:  a list of strings. If the object to be updated has an ACL,
 //         one of the provided strings must provide the caller with
 //         write permissions.
-const specialKeysForUpdate = ['_hashed_password', '_perishable_token', '_email_verify_token', '_email_verify_token_expires_at'];
+const specialKeysForUpdate = ['_hashed_password', '_perishable_token', '_email_verify_token', '_email_verify_token_expires_at', '_account_lockout_expires_at', '_failed_login_count'];
+
+const isSpecialUpdateKey = key => {
+  return specialKeysForUpdate.indexOf(key) >= 0;
+}
+
 DatabaseController.prototype.update = function(className, query, update, {
   acl,
   many,
@@ -231,7 +243,7 @@ DatabaseController.prototype.update = function(className, query, update, {
             throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, `Invalid field name for update: ${fieldName}`);
           }
           fieldName = fieldName.split('.')[0];
-          if (!SchemaController.fieldNameIsValid(fieldName) && !specialKeysForUpdate.includes(fieldName)) {
+          if (!SchemaController.fieldNameIsValid(fieldName) && !isSpecialUpdateKey(fieldName)) {
             throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, `Invalid field name for update: ${fieldName}`);
           }
         });
@@ -715,10 +727,12 @@ DatabaseController.prototype.find = function(className, query, {
   acl,
   sort = {},
   count,
+  keys,
+  op
 } = {}) {
   let isMaster = acl === undefined;
   let aclGroup = acl || [];
-  let op = typeof query.objectId == 'string' && Object.keys(query).length === 1 ? 'get' : 'find';
+  op = op || (typeof query.objectId == 'string' && Object.keys(query).length === 1 ? 'get' : 'find');
   let classExists = true;
   return this.loadSchema()
   .then(schemaController => {
@@ -783,7 +797,7 @@ DatabaseController.prototype.find = function(className, query, {
           if (!classExists) {
             return [];
           } else {
-            return this.adapter.find(className, schema, query, { skip, limit, sort })
+            return this.adapter.find(className, schema, query, { skip, limit, sort, keys })
             .then(objects => objects.map(object => {
               object = untransformObjectACL(object);
               return filterSensitiveData(isMaster, aclGroup, className, object)
@@ -863,6 +877,7 @@ DatabaseController.prototype.addPointerPermissions = function(schema, className,
   // the ACL should have exactly 1 user
   if (perms && perms[field] && perms[field].length > 0) {
     // No user set return undefined
+    // If the length is > 1, that means we didn't dedup users correctly
     if (userACL.length != 1) {
       return;
     }

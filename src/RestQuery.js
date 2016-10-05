@@ -20,6 +20,7 @@ function RestQuery(config, auth, className, restWhere = {}, restOptions = {}, cl
   this.auth = auth;
   this.className = className;
   this.restWhere = restWhere;
+  this.restOptions = restOptions;
   this.clientSDK = clientSDK;
   this.response = null;
   this.findOptions = {};
@@ -56,6 +57,7 @@ function RestQuery(config, auth, className, restWhere = {}, restOptions = {}, cl
     switch(option) {
     case 'keys':
       this.keys = new Set(restOptions.keys.split(','));
+        // Add the default
       this.keys.add('objectId');
       this.keys.add('createdAt');
       this.keys.add('updatedAt');
@@ -111,11 +113,11 @@ function RestQuery(config, auth, className, restWhere = {}, restOptions = {}, cl
 // Returns a promise for the response - an object with optional keys
 // 'results' and 'count'.
 // TODO: consolidate the replaceX functions
-RestQuery.prototype.execute = function() {
+RestQuery.prototype.execute = function(executeOptions) {
   return Promise.resolve().then(() => {
     return this.buildRestWhere();
   }).then(() => {
-    return this.runFind();
+    return this.runFind(executeOptions);
   }).then(() => {
     return this.runCount();
   }).then(() => {
@@ -158,8 +160,9 @@ RestQuery.prototype.getUserAndRoleACL = function() {
     return Promise.resolve();
   }
   return this.auth.getUserRoles().then((roles) => {
-    roles.push(this.auth.user.id);
-    this.findOptions.acl = roles;
+    // Concat with the roles to prevent duplications on multiple calls
+    const aclSet = new Set([].concat(this.findOptions.acl, roles));
+    this.findOptions.acl = Array.from(aclSet);
     return Promise.resolve();
   });
 };
@@ -393,7 +396,7 @@ RestQuery.prototype.replaceDontSelect = function() {
 
 // Returns a promise for whether it was successful.
 // Populates this.response with an object that only has 'results'.
-RestQuery.prototype.runFind = function() {
+RestQuery.prototype.runFind = function(options = {}) {
   if (this.findOptions.limit === 0) {
     this.response = {results: []};
     return Promise.resolve();
@@ -405,8 +408,17 @@ RestQuery.prototype.runFind = function() {
     }
   }
 
+  let findOptions = Object.assign({}, this.findOptions);
+  if (this.keys) {
+    findOptions.keys = Array.from(this.keys).map((key) => {
+      return key.split('.')[0];
+    });
+  }
+  if (options.op) {
+      findOptions.op = options.op;
+  }
   return this.config.database.find(
-    this.className, this.restWhere, this.findOptions).then((results) => {
+    this.className, this.restWhere, findOptions).then((results) => {
     if (this.className === '_User') {
       for (var result of results) {
         delete result.password;
@@ -460,19 +472,6 @@ RestQuery.prototype.runFind = function() {
     }
 
     this.config.filesController.expandFilesInObject(this.config, results);
-
-    if (this.keys) {
-      var keySet = this.keys;
-      results = results.map((object) => {
-        var newObject = {};
-        for (var key in object) {
-          if (keySet.has(key)) {
-            newObject[key] = object[key];
-          }
-        }
-        return newObject;
-      });
-    }
 
     if (this.redirectClassName) {
       for (var r of results) {
@@ -581,7 +580,7 @@ RestQuery.prototype.handleInclude = function() {
   }
 
   var pathResponse = includePath(this.config, this.auth,
-                                 this.response, this.include[0], this.className);
+                                 this.response, this.include[0], this.restOptions, this.className);
   if (pathResponse.then) {
     return pathResponse.then((newResponse) => {
       this.response = newResponse;
@@ -599,14 +598,16 @@ RestQuery.prototype.handleInclude = function() {
 // Adds included values to the response.
 // Path is a list of field names.
 // Returns a promise for an augmented response.
-function includePath(config, auth, response, path, startingClassName) {
+function includePath(config, auth, response, path, restOptions = {}, startingClassName) {
   var pointers = findPointers(response.results, path);
   if (pointers.length == 0) {
     return response;
   }
   let pointersHash = {};
-  var objectIds = {};
   for (var pointer of pointers) {
+    if (!pointer) {
+      continue;
+    }
     let className = pointer.className;
     // only include the good pointers
     if (className) {
@@ -617,15 +618,32 @@ function includePath(config, auth, response, path, startingClassName) {
           continue;
         }
       }
-      pointersHash[className] = pointersHash[className] || [];
-      pointersHash[className].push(pointer.objectId);
+      pointersHash[className] = pointersHash[className] || new Set();
+      pointersHash[className].add(pointer.objectId);
     }
   }
 
+  let includeRestOptions = {};
+  if (restOptions.keys) {
+    let keys = new Set(restOptions.keys.split(','));
+    let keySet = Array.from(keys).reduce((set, key) => {
+      let keyPath = key.split('.');
+      let i=0;
+      for (i; i<path.length; i++) {
+        if (path[i] != keyPath[i]) {
+          return set;
+        }
+      }
+      set.add(keyPath[i]);
+      return set;
+    }, new Set());
+    includeRestOptions.keys = Array.from(keySet).join(',');
+  }
+
   let queryPromises = Object.keys(pointersHash).map((className) => {
-    var where = {'objectId': {'$in': pointersHash[className]}};
-    var query = new RestQuery(config, auth, className, where);
-    return query.execute().then((results) => {
+    let where = {'objectId': {'$in': Array.from(pointersHash[className])}};
+    var query = new RestQuery(config, auth, className, where, includeRestOptions);
+    return query.execute({op: 'get'}).then((results) => {
       results.className = className;
       return Promise.resolve(results);
     })
@@ -671,12 +689,12 @@ function findPointers(object, path) {
     return answer;
   }
 
-  if (typeof object !== 'object') {
+  if (typeof object !== 'object' || !object) {
     return [];
   }
 
   if (path.length == 0) {
-    if (object.__type == 'Pointer') {
+    if (object === null || object.__type == 'Pointer') {
       return [object];
     }
     return [];
@@ -698,15 +716,15 @@ function findPointers(object, path) {
 function replacePointers(object, path, replace, startingClassName, auth) {
   if (object instanceof Array) {
     return object.map((obj) => replacePointers(obj, path, replace, startingClassName, auth))
-              .filter((obj) => obj != null && obj != undefined);
+             .filter((obj) => typeof obj !== 'undefined');
   }
 
-  if (typeof object !== 'object') {
+  if (typeof object !== 'object' || !object) {
     return object;
   }
 
   if (path.length === 0) {
-    if (object.__type === 'Pointer') {
+    if (object && object.__type === 'Pointer') {
       if (startingClassName === 'match' && auth.user.id === object.objectId) {
         return object;
       }

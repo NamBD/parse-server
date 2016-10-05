@@ -16,11 +16,19 @@ describe('info logs', () => {
         }, (results) => {
           if (results.length == 0) {
             fail('The adapter should return non-empty results');
-            done();
           } else {
             expect(results[0].message).toEqual('testing info logs');
-            done();
           }
+          // Check the error log
+          // Regression #2639
+          winstonLoggerAdapter.query({
+            from: new Date(Date.now() - 500),
+            size: 100,
+            level: 'error'
+          }, (results) => {
+            expect(results.length).toEqual(0);
+            done();
+          });
         });
       });
     });
@@ -88,21 +96,5 @@ describe('verbose logs', () => {
       fail(JSON.stringify(err));
       done();
     })
-  });
-
-  it("should not mask information in non _User class", (done) => {
-    let obj = new Parse.Object('users');
-    obj.set('password', 'pw');
-    obj.save().then(() => {
-      let winstonLoggerAdapter = new WinstonLoggerAdapter();
-      return winstonLoggerAdapter.query({
-        from: new Date(Date.now() - 500),
-        size: 100,
-        level: 'verbose'
-      });
-    }).then((results) => {
-      expect(results[1].body.password).toEqual("pw");
-      done();
-    });
   });
 });

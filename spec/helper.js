@@ -14,6 +14,11 @@ global.on_db = (db, callback, elseCallback) => {
   }
 }
 
+if (global._babelPolyfill) {
+  console.error('We should not use polyfilled tests');
+  process.exit(1);
+}
+
 var cache = require('../src/cache').default;
 var express = require('express');
 var facebook = require('../src/authDataManager/facebook');
@@ -24,6 +29,7 @@ var MongoStorageAdapter = require('../src/Adapters/Storage/Mongo/MongoStorageAda
 const GridStoreAdapter = require('../src/Adapters/Files/GridStoreAdapter').GridStoreAdapter;
 const FSAdapter = require('parse-server-fs-adapter');
 const PostgresStorageAdapter = require('../src/Adapters/Storage/Postgres/PostgresStorageAdapter');
+const RedisCacheAdapter = require('../src/Adapters/Cache/RedisCacheAdapter').default;
 
 const mongoURI = 'mongodb://localhost:27017/parseServerMongoAdapterTestDatabase';
 const postgresURI = 'postgres://localhost:5432/parse_server_postgres_adapter_test_database';
@@ -101,12 +107,19 @@ var defaultConfiguration = {
   },
 };
 
+if (process.env.PARSE_SERVER_TEST_CACHE === 'redis') {
+  defaultConfiguration.cacheAdapter = new RedisCacheAdapter();
+}
+
 let openConnections = {};
 
 // Set up a default API server for testing with default configuration.
 var app = express();
 var api = new ParseServer(defaultConfiguration);
 app.use('/1', api);
+app.use('/1', (req, res) => {
+  fail('should not call next');
+});
 var server = app.listen(port);
 server.on('connection', connection => {
   let key = `${connection.remoteAddress}:${connection.remotePort}`;
@@ -126,7 +139,9 @@ const reconfigureServer = changedConfiguration => {
         api = new ParseServer(newConfiguration);
         api.use(require('./testing-routes').router);
         app.use('/1', api);
-
+        app.use('/1', (req, res) => {
+          fail('should not call next');
+        });
         server = app.listen(port);
         server.on('connection', connection => {
           let key = `${connection.remoteAddress}:${connection.remotePort}`;
@@ -204,7 +219,7 @@ afterEach(function(done) {
         } else {
           // Other system classes will break Parse.com, so make sure that we don't save anything to _SCHEMA that will
           // break it.
-          return ['_User', '_Installation', '_Role', '_Session', '_Product'].includes(className);
+          return ['_User', '_Installation', '_Role', '_Session', '_Product'].indexOf(className) >= 0;
         }
       }});
     });
@@ -377,7 +392,7 @@ global.jfail = function(err) {
 }
 
 global.it_exclude_dbs = excluded => {
-  if (excluded.includes(process.env.PARSE_SERVER_TEST_DB)) {
+  if (excluded.indexOf(process.env.PARSE_SERVER_TEST_DB) >= 0) {
     return xit;
   } else {
     return it;
@@ -385,7 +400,7 @@ global.it_exclude_dbs = excluded => {
 }
 
 global.fit_exclude_dbs = excluded => {
-  if (excluded.includes(process.env.PARSE_SERVER_TEST_DB)) {
+  if (excluded.indexOf(process.env.PARSE_SERVER_TEST_DB) >= 0) {
     return xit;
   } else {
     return fit;

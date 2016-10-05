@@ -31,6 +31,7 @@ const defaultColumns = Object.freeze({
     "password":      {type:'String'},
     "email":         {type:'String'},
     "emailVerified": {type:'Boolean'},
+    "authData":      {type:'Object'}
   },
   // The additional default columns for the _Installation collection (in addition to DefaultCols)
   _Installation: {
@@ -87,6 +88,14 @@ const defaultColumns = Object.freeze({
     "sentPerType":  {type:'Object'},
     "failedPerType":{type:'Object'},
   },
+  _JobStatus: {
+    "jobName":    {type: 'String'},
+    "source":     {type: 'String'},
+    "status":     {type: 'String'},
+    "message":    {type: 'String'},
+    "params":     {type: 'Object'}, // params received when calling the job
+    "finishedAt": {type: 'Date'}
+  },
   _Hooks: {
     "functionName": {type:'String'},
     "className":    {type:'String'},
@@ -104,9 +113,9 @@ const requiredColumns = Object.freeze({
   _Role: ["name", "ACL"]
 });
 
-const systemClasses = Object.freeze(['_User', '_Installation', '_Role', '_Session', '_Product', '_PushStatus']);
+const systemClasses = Object.freeze(['_User', '_Installation', '_Role', '_Session', '_Product', '_PushStatus', '_JobStatus']);
 
-const volatileClasses = Object.freeze(['_PushStatus', '_Hooks', '_GlobalConfig']);
+const volatileClasses = Object.freeze(['_JobStatus', '_PushStatus', '_Hooks', '_GlobalConfig']);
 
 // 10 alpha numberic chars + uppercase
 const userIdRegex = /^[a-zA-Z0-9]{10}$/;
@@ -209,7 +218,7 @@ const validNonRelationOrPointerTypes = [
 ];
 // Returns an error suitable for throwing if the type is invalid
 const fieldTypeIsInvalid = ({ type, targetClass }) => {
-  if (['Pointer', 'Relation'].includes(type)) {
+  if (['Pointer', 'Relation'].indexOf(type) >= 0) {
     if (!targetClass) {
       return new Parse.Error(135, `type ${type} needs a class name`);
     } else if (typeof targetClass !== 'string') {
@@ -223,7 +232,7 @@ const fieldTypeIsInvalid = ({ type, targetClass }) => {
    if (typeof type !== 'string') {
     return invalidJsonError;
    }
-  if (!validNonRelationOrPointerTypes.includes(type)) {
+  if (validNonRelationOrPointerTypes.indexOf(type) < 0) {
     return new Parse.Error(Parse.Error.INCORRECT_TYPE, `invalid field type: ${type}`);
    }
   return undefined;
@@ -275,7 +284,12 @@ const _PushStatusSchema = convertSchemaToAdapterSchema(injectDefaultSchema({
     fields: {},
     classLevelPermissions: {}
 }));
-const VolatileClassesSchemas = [_HooksSchema, _PushStatusSchema, _GlobalConfigSchema];
+const _JobStatusSchema = convertSchemaToAdapterSchema(injectDefaultSchema({
+    className: "_JobStatus",
+    fields: {},
+    classLevelPermissions: {}
+}));
+const VolatileClassesSchemas = [_HooksSchema, _JobStatusSchema, _PushStatusSchema, _GlobalConfigSchema];
 
 const dbTypeMatchesObjectType = (dbType, objectType) => {
   if (dbType.type !== objectType.type) return false;
@@ -283,6 +297,13 @@ const dbTypeMatchesObjectType = (dbType, objectType) => {
   if (dbType === objectType.type) return true;
   if (dbType.type === objectType.type) return true;
   return false;
+}
+
+const typeToString = (type) => {
+  if (type.targetClass) {
+    return `${type.type}<${type.targetClass}>`;
+  }
+  return `${type.type || type}`;
 }
 
 // Stores the entire schema of the app in a weird hybrid format somewhere between
@@ -466,7 +487,7 @@ export default class SchemaController {
 
   validateSchemaData(className, fields, classLevelPermissions, existingFieldNames) {
     for (let fieldName in fields) {
-      if (!existingFieldNames.includes(fieldName)) {
+      if (existingFieldNames.indexOf(fieldName) < 0) {
         if (!fieldNameIsValid(fieldName)) {
           return {
             code: Parse.Error.INVALID_KEY_NAME,
@@ -537,7 +558,7 @@ export default class SchemaController {
         if (!dbTypeMatchesObjectType(expectedType, type)) {
           throw new Parse.Error(
             Parse.Error.INCORRECT_TYPE,
-            `schema mismatch for ${className}.${fieldName}; expected ${expectedType.type || expectedType} but got ${type.type}`
+            `schema mismatch for ${className}.${fieldName}; expected ${typeToString(expectedType)} but got ${typeToString(type)}`
           );
         }
         return this;

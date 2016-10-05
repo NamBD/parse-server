@@ -1,43 +1,13 @@
-function numberParser(key) {
-  return function(opt) {
-    opt = parseInt(opt);
-    if (!Number.isInteger(opt)) {
-      throw new Error(`The ${key} is invalid`);
-    }
-    return opt;
-  }
-}
+import {
+  numberParser,
+  numberOrBoolParser,
+  objectParser,
+  arrayParser,
+  moduleOrObjectParser,
+  booleanParser,
+  nullParser
+} from '../utils/parsers';
 
-function objectParser(opt) {
-  if (typeof opt == 'object') {
-    return opt;
-  }
-  return JSON.parse(opt)
-}
-
-function moduleOrObjectParser(opt) {
-  if (typeof opt == 'object')  {
-    return opt;
-  }
-  try {
-    return JSON.parse(opt);
-  } catch(e) {}
-  return opt;
-}
-
-function booleanParser(opt) {
-  if (opt == true || opt == "true" || opt == "1") {
-    return true;
-  }
-  return false;
-}
-
-function nullParser(opt) {
-  if (opt == 'null') {
-    return null;
-  }
-  return opt;
-}
 
 export default {
   "appId": {
@@ -119,9 +89,7 @@ export default {
     env: "PARSE_SERVER_FACEBOOK_APP_IDS",
     help: "Comma separated list for your facebook app Ids",
     type: "list",
-    action: function(opt) {
-      return opt.split(",")
-    }
+    action: arrayParser
   },
   "enableAnonymousUsers": {
     env: "PARSE_SERVER_ENABLE_ANON_USERS",
@@ -162,6 +130,11 @@ export default {
     env: "PARSE_SERVER_EMAIL_VERIFY_TOKEN_VALIDITY_DURATION",
     help: "Email verification token validity duration",
     action: numberParser("emailVerifyTokenValidityDuration")
+  },
+  "accountLockout": {
+    env: "PARSE_SERVER_ACCOUNT_LOCKOUT",
+    help: "account lockout policy for failed login attempts",
+    action: objectParser
   },
   "appName": {
     env: "PARSE_SERVER_APP_NAME",
@@ -216,5 +189,28 @@ export default {
     env: "PARSE_SERVER_REVOKE_SESSION_ON_PASSWORD_RESET",
     help: "When a user changes their password, either through the reset password email or while logged in, all sessions are revoked if this is true. Set to false if you don't want to revoke sessions.",
     action: booleanParser
-  }
+  },
+  "cluster": {
+    help: "Run with cluster, optionally set the number of processes default to os.cpus().length",
+    action: numberOrBoolParser("cluster")
+  },
+   "liveQuery.classNames": {
+    help: "parse-server's LiveQuery configuration object",
+    action: objectParser
+  },
+  "liveQuery.classNames": {
+    help: "parse-server's LiveQuery classNames",
+    action: arrayParser
+  },
+  "liveQuery.redisURL": {
+    help: "parse-server's LiveQuery redisURL",
+  },
+  "startLiveQueryServer": {
+    help: "Starts the liveQuery server",
+    action: booleanParser
+  },
+  "liveQueryServerOptions": {
+    help: "Live query server configuration options (will start the liveQuery server)",
+    action: objectParser
+  },
 };
