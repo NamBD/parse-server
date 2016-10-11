@@ -109,18 +109,18 @@ class MongoSchemaCollection {
   }
 
   _fetchAllSchemasFrom_SCHEMA() {
-
+/*
     var hardSchema = AppCache.get('hardSchema');
 
     return Promise.resolve(hardSchema)
     .then(schemas => schemas.map(mongoSchemaToParseSchema));
-
-    //return this._collection._rawFind({})
-    //.then(schemas => schemas.map(mongoSchemaToParseSchema));
+*/
+    return this._collection._rawFind({})
+    .then(schemas => schemas.map(mongoSchemaToParseSchema));
   }
 
   _fechOneSchemaFrom_SCHEMA(name: string) {
-
+/*
     var hardSchema = AppCache.get('hardSchema');
     var hardSchemaIndex = -1;
 
@@ -163,14 +163,14 @@ class MongoSchemaCollection {
         throw undefined;
       }
     });
-
-    //return this._collection._rawFind(_mongoSchemaQueryFromNameQuery(name), { limit: 1 }).then(results => {
-      //if (results.length === 1) {
-        //return mongoSchemaToParseSchema(results[0]);
-      //} else {
-        //throw undefined;
-      //}
-    //});
+*/
+    return this._collection._rawFind(_mongoSchemaQueryFromNameQuery(name), { limit: 1 }).then(results => {
+      if (results.length === 1) {
+        return mongoSchemaToParseSchema(results[0]);
+      } else {
+        throw undefined;
+      }
+    });
   }
 
   // Atomically find and delete an object based on query.
