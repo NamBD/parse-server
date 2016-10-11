@@ -630,7 +630,6 @@ function includePath(config, auth, response, path, restOptions = {}, startingCla
       pointersHash[className].add(pointer.objectId);
     }
   }
-
   let includeRestOptions = {};
   if (restOptions.keys) {
     let keys = new Set(restOptions.keys.split(','));
@@ -642,10 +641,14 @@ function includePath(config, auth, response, path, restOptions = {}, startingCla
           return set;
         }
       }
-      set.add(keyPath[i]);
+      if (i < keyPath.length) {
+        set.add(keyPath[i]);
+      }
       return set;
     }, new Set());
-    includeRestOptions.keys = Array.from(keySet).join(',');
+    if (keySet.size > 0) {
+      includeRestOptions.keys = Array.from(keySet).join(',');
+    }
   }
 
   let queryPromises = Object.keys(pointersHash).map((className) => {
