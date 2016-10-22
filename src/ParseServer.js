@@ -7,6 +7,7 @@ var batch = require('./batch'),
     multer = require('multer'),
     Parse = require('parse/node').Parse,
     path = require('path'),
+    url = require('url'),
     authDataManager = require('./authDataManager');
 
 import defaults                 from './defaults';
@@ -53,6 +54,7 @@ import { PurgeRouter }          from './Routers/PurgeRouter';
 import DatabaseController       from './Controllers/DatabaseController';
 import ParsePushAdapter         from 'parse-server-push-adapter';
 import MongoStorageAdapter      from './Adapters/Storage/Mongo/MongoStorageAdapter';
+import PostgresStorageAdapter   from './Adapters/Storage/Postgres/PostgresStorageAdapter';
 
 import { ParseServerRESTController } from './ParseServerRESTController';
 // Mutate the Parse object to add the Cloud Code handlers
@@ -151,11 +153,7 @@ class ParseServer {
     if ((databaseOptions || (databaseURI && databaseURI != defaults.DefaultMongoURI) || collectionPrefix !== '') && databaseAdapter) {
       throw 'You cannot specify both a databaseAdapter and a databaseURI/databaseOptions/collectionPrefix.';
     } else if (!databaseAdapter) {
-      databaseAdapter = new MongoStorageAdapter({
-        uri: databaseURI,
-        collectionPrefix,
-        mongoOptions: databaseOptions,
-      });
+      databaseAdapter = this.getDatabaseAdapter(databaseURI, collectionPrefix, databaseOptions)
     } else {
       databaseAdapter = loadAdapter(databaseAdapter)
     }
@@ -254,6 +252,28 @@ class ParseServer {
       } else {
         throw "argument 'cloud' must either be a string or a function";
       }
+    }
+  }
+
+  getDatabaseAdapter(databaseURI, collectionPrefix, databaseOptions) {
+    let protocol;
+    try{
+      const parsedURI = url.parse(databaseURI);
+      protocol = parsedURI.protocol ? parsedURI.protocol.toLowerCase() : null;
+    }catch(e){}
+    switch (protocol) {
+      case 'postgres:':
+        return new PostgresStorageAdapter({
+          uri: databaseURI,
+          collectionPrefix,
+          databaseOptions
+        });
+      default:
+        return new MongoStorageAdapter({
+          uri: databaseURI,
+          collectionPrefix,
+          mongoOptions: databaseOptions,
+        });
     }
   }
 
