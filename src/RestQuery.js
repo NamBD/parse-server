@@ -442,10 +442,8 @@ RestQuery.prototype.runFind = function(options = {}) {
           delete result.sessionToken;
           delete result.authData;
 
-          if (this.auth.user.id !== result.objectId) {
-            result.createdAt = '2016-09-08T09:11:11.382Z';
-            result.updatedAt = '2016-09-08T09:16:52.909Z';
-          }
+          result.createdAt = '2016-09-08T09:11:11.382Z';
+          result.updatedAt = '2016-09-08T09:16:52.909Z';
 
           delete result.loveMatches;
           delete result.blockedCount;
