@@ -42,6 +42,9 @@ export class UsersRouter extends ClassesRouter {
   }
 
   handleMe(req) {
+
+    throw new Parse.Error(Parse.Error.INVALID_SESSION_TOKEN, 'invalid session token');
+/*
     if (!req.info || !req.info.sessionToken) {
       throw new Parse.Error(Parse.Error.INVALID_SESSION_TOKEN, 'invalid session token');
     }
@@ -73,10 +76,15 @@ export class UsersRouter extends ClassesRouter {
           return { response: user };
         }
       });
+      */
   }
 
   handleLogIn(req) {
+
+    throw new Parse.Error(Parse.Error.USERNAME_MISSING, 'username is required.');
+
     // Use query parameters instead if provided in url
+/*
     if (!req.body.username && req.query.username) {
       req.body = req.query;
     }
@@ -170,6 +178,7 @@ export class UsersRouter extends ClassesRouter {
       }).then(() => {
         return { response: user };
       });
+      */
   }
 
   handleLogOut(req) {
