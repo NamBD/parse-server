@@ -81,30 +81,18 @@ export class PushController extends AdaptableController {
         });
       }
     }
-    let pushStatus = pushStatusHandler(config);
-    return Promise.resolve().then(() => {
-      return pushStatus.setInitial(body, where);
-    }).then(() => {
-      onPushStatusSaved(pushStatus.objectId);
-      return badgeUpdate();
-    }).then(() => {
+
+    return badgeUpdate().then(() => {
       return rest.find(config, auth, '_Installation', where);
     }).then((response) => {
       if (!response.results) {
         return Promise.reject({error: 'PushController: no results in query'})
       }
-      pushStatus.setRunning(response.results);
-      return this.sendToAdapter(body, response.results, pushStatus, config);
-    }).then((results) => {
-      return pushStatus.complete(results);
-    }).catch((err) => {
-      return pushStatus.fail(err).then(() => {
-        throw err;
-      });
+      return this.sendToAdapter(body, response.results);
     });
   }
 
-  sendToAdapter(body, installations, pushStatus, config) {
+  sendToAdapter(body, installations) {
     if (body.data && body.data.badge && typeof body.data.badge == 'string' && body.data.badge.toLowerCase() == "increment") {
       // Collect the badges to reduce the # of calls
       let badgeInstallationsMap = installations.reduce((map, installation) => {
@@ -125,11 +113,11 @@ export class PushController extends AdaptableController {
         } else {
           payload.data.badge = parseInt(badge);
         }
-        return this.adapter.send(payload, badgeInstallationsMap[badge], pushStatus.objectId);
+        return this.adapter.send(payload, badgeInstallationsMap[badge]);
       });
       return Promise.all(promises);
     }
-    return this.adapter.send(body, installations, pushStatus.objectId);
+    return this.adapter.send(body, installations);
   }
 
   /**
