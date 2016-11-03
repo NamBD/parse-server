@@ -20,10 +20,10 @@ export class InMemoryCacheAdapter {
     return new Promise((resolve, reject) => {
       this.client.get(key, function(error, record) {
         if (error || !record) {
-          logger.error('record not found - Key: ' + key);
+          //logger.error('record not found - Key: ' + key);
           return resolve(null);
         } else {
-          logger.info('record found - key: ' + key);
+          //logger.info('record found - key: ' + key);
           return resolve(JSON.parse(record));
         }
       });
@@ -36,17 +36,17 @@ export class InMemoryCacheAdapter {
     {
         this.client.set(key, JSON.stringify(value), 'NX', 'EX', expire, function(error, reply) {
           if (error) {
-            logger.error(error);
+            //logger.error(error);
           } else {
-            logger.info('Record Set with expire.  Key: ' + key + '  ,   expire: ' + expire);
+            //logger.info('Record Set with expire.  Key: ' + key + '  ,   expire: ' + expire);
           }
         });
     } else {
       this.client.set(key, JSON.stringify(value), function(error, reply) {
         if (error) {
-          logger.error(error);
+          //logger.error(error);
         } else {
-          logger.info('Record Set without expire - Key: ' + key);
+          //logger.info('Record Set without expire - Key: ' + key);
         }
       });
     }
@@ -56,9 +56,9 @@ export class InMemoryCacheAdapter {
   del(key) {
     this.client.del(key, function(error, reply) {
       if (error) {
-        logger.error(error);
+        //logger.error(error);
       } else {
-        logger.info('Record Deleted - Key: ' + key);
+        //logger.info('Record Deleted - Key: ' + key);
       }
     });
     return Promise.resolve();
@@ -67,9 +67,9 @@ export class InMemoryCacheAdapter {
   clear() {
     this.client.flushdb(function(error, reply) {
       if (error) {
-        logger.error(error);
+        //logger.error(error);
       } else {
-        logger.info('All Records Flushed');
+        //logger.info('All Records Flushed');
       }
     });
     return Promise.resolve();
