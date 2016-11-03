@@ -83,7 +83,9 @@ export class PushController extends AdaptableController {
     }
 
     return badgeUpdate().then(() => {
-      return rest.find(config, auth, '_Installation', where);
+      let includeRestOptions = {};
+      includeRestOptions.keys = 'badge,deviceType,deviceToken,appIdentifier';
+      return rest.find(config, auth, '_Installation', where, includeRestOptions);
     }).then((response) => {
       if (!response.results) {
         return Promise.reject({error: 'PushController: no results in query'})
