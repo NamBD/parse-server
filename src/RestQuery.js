@@ -124,14 +124,12 @@ RestQuery.prototype.execute = function(executeOptions) {
 
     if (this.className === 'match' && this.include.length === 2) {
       //&& this.include.indexOf(['user1']) > -1 && this.include.indexOf(['user2']) > -1)
-      console.log('special');
       return this.handleSpecialMatchInclude();
     } else {
       return this.handleInclude();
     }
 
   }).then(() => {
-    console.log(this.response.results);
     return this.response;
   });
 };
@@ -351,7 +349,6 @@ const transformDontSelect = (dontSelectObject, key, objects) => {
   for (var result of objects) {
     values.push(result[key]);
   }
-  console.log(values);
   delete dontSelectObject['$dontSelect'];
   if (Array.isArray(dontSelectObject['$nin'])) {
     dontSelectObject['$nin'] = dontSelectObject['$nin'].concat(values);
@@ -530,7 +527,6 @@ RestQuery.prototype.handleSpecialMatchInclude = function() {
   }
 
   if (!pointersHash['_User']) {
-    console.log("include not run");
     return;
   }
 

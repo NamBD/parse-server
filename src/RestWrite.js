@@ -52,9 +52,6 @@ function RestWrite(config, auth, className, query, data, originalData, clientSDK
   // The timestamp we'll use for this whole operation
   this.updatedAt = Parse._encode(new Date()).iso;
   this.skipTriggers = skipTriggers;
-  console.log("RESTWrite init");
-  console.log(this.skipTriggers);
-  console.log(originalData);
 }
 
 // A convenient method to perform all the steps of processing the

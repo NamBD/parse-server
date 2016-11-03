@@ -7,7 +7,6 @@ export class InMemoryCache {
   }) {
     this.ttl = ttl;
     this.cache = Object.create(null);
-    console.log('InMemoryCache init');
   }
 
   get(key) {
