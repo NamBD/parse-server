@@ -921,6 +921,12 @@ RestWrite.prototype.runDatabaseOperation = function() {
         throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Cannot create without user.');
       }
 
+      if (this.data.userId) {
+        if (this.data.userId !== this.auth.user.id && this.data.userId !== 'none') {
+          throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Invalid user ID.');
+        }
+      }
+
       var ACL = {};
       ACL['*'] = { read: false, write: true };
       ACL[this.auth.user.id] = { read: false, write: true };
