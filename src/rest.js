@@ -20,6 +20,10 @@ function find(config, auth, className, restWhere, restOptions, clientSDK) {
   return triggers.maybeRunQueryTrigger(triggers.Types.beforeFind, className, restWhere, restOptions, config, auth).then((result) => {
     restWhere = result.restWhere || restWhere;
     restOptions = result.restOptions || restOptions;
+
+    console.log(restWhere);
+    console.log(restOptions);
+
     let query = new RestQuery(config, auth, className, restWhere, restOptions, clientSDK);
     return query.execute();
   });
