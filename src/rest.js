@@ -22,10 +22,32 @@ function find(config, auth, className, restWhere, restOptions, clientSDK) {
     restOptions = result.restOptions || restOptions;
 
     if (className === 'match' && !auth.isMaster) {
+
+      if (!auth.user || !auth.user.id) {
+        throw new Parse.Error(Parse.Error.OPERATION_FORBIDDEN, 'Need more info');
+      }
+
+      if (!restWhere.type || !restWhere.createdAt || !restWhere.createdAt.iso) {
+        throw new Parse.Error(Parse.Error.OPERATION_FORBIDDEN, 'Need more info');
+      }
+
+      var reqType = restWhere.type;
+
+      if (reqType !== 'lust' && reqType !== 'love') {
+        throw new Parse.Error(Parse.Error.OPERATION_FORBIDDEN, 'Need more info');
+      }
+
+      var reqDate = restWhere.createdAt.iso;
+
+      var newRestWhere = { '$or':
+      [ { user1Id: auth.user.id, type: reqType, createdAt: { '$gt': { __type: 'Date', iso: reqDate } } },
+        { user2Id: auth.user.id, type: reqType, createdAt: { '$gt': { __type: 'Date', iso: reqDate } } } ],
+        isActive: true };
+
+      restWhere = newRestWhere;
+
       console.log(restWhere);
-      console.log(restWhere.$or);
       console.log(restWhere.$or[0]);
-      console.log(restWhere.$or[0].createdAt);
       console.log(restOptions);
     }
 
