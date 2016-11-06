@@ -21,8 +21,13 @@ function find(config, auth, className, restWhere, restOptions, clientSDK) {
     restWhere = result.restWhere || restWhere;
     restOptions = result.restOptions || restOptions;
 
-    console.log(restWhere);
-    console.log(restOptions);
+    if (className === 'match' && !auth.isMaster) {
+      console.log(restWhere);
+      console.log(restWhere.$or);
+      console.log(restWhere.$or[0]);
+      console.log(restWhere.$or[0].createdAt);
+      console.log(restOptions);
+    }
 
     let query = new RestQuery(config, auth, className, restWhere, restOptions, clientSDK);
     return query.execute();
