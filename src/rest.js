@@ -60,10 +60,6 @@ function find(config, auth, className, restWhere, restOptions, clientSDK) {
       }
 
       restOptions = newRestOptions;
-
-      console.log(restWhere);
-      console.log(restWhere.$or[0]);
-      console.log(restOptions);
     }
 
     let query = new RestQuery(config, auth, className, restWhere, restOptions, clientSDK);
