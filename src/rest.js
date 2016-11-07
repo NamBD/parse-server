@@ -46,6 +46,21 @@ function find(config, auth, className, restWhere, restOptions, clientSDK) {
 
       restWhere = newRestWhere;
 
+      var newRestOptions = {
+        order: '-lastChatUpdate',
+        keys: 'createdAt,isActive,lastChatUpdate,lastMessage,messages,push,type,updatedAt,user1,user1Alert,user1Count,user1Id,user1Letters,user1Level,user1Liked,user1Name,user2,user2Alert,user2Count,user2Id,user2Letters,user2Level,user2Liked,user2Name',
+        include: 'user1,user2' }
+
+      if (restOptions.limit) {
+        newRestOptions.limit = restOptions.limit;
+      }
+
+      if (restOptions.skip) {
+        newRestOptions.skip = restOptions.skip;
+      }
+
+      restOptions = newRestOptions;
+
       console.log(restWhere);
       console.log(restWhere.$or[0]);
       console.log(restOptions);
