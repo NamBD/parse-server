@@ -123,11 +123,16 @@ RestQuery.prototype.execute = function(executeOptions) {
   }).then(() => {
 
     if (this.className === 'match' && this.include.length === 2) {
-      //&& this.include.indexOf(['user1']) > -1 && this.include.indexOf(['user2']) > -1)
-      return this.handleSpecialMatchInclude();
-    } else {
-      return this.handleInclude();
+      if (this.include[0].length === 1 && this.include[1].length === 1) {
+        if ((this.include[0][0] === 'user1' && this.include[1][0] === 'user2') ||
+            (this.include[0][0] === 'user2' && this.include[1][0] === 'user1')) {
+          console.log(this.include);
+          return this.handleSpecialMatchInclude();
+        }
+      }
     }
+
+    return this.handleInclude();
 
   }).then(() => {
     return this.response;
