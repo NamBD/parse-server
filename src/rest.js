@@ -246,6 +246,17 @@ function enforceRoleSecurity(method, className, auth) {
     }
   }
 
+  if (className === 'banned' && !auth.isMaster) {
+    let error = `Clients aren't allowed to perform the ${method} operation on the banned collection.`
+    throw new Parse.Error(Parse.Error.OPERATION_FORBIDDEN, error);
+  }
+
+  if (className === 'report' && !auth.isMaster) {
+    if (method !== 'create') {
+      let error = `Clients aren't allowed to perform the ${method} operation on the swipe collection.`
+      throw new Parse.Error(Parse.Error.OPERATION_FORBIDDEN, error);
+    }
+  }
 }
 
 module.exports = {
