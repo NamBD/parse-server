@@ -126,7 +126,6 @@ RestQuery.prototype.execute = function(executeOptions) {
       if (this.include[0].length === 1 && this.include[1].length === 1) {
         if ((this.include[0][0] === 'user1' && this.include[1][0] === 'user2') ||
             (this.include[0][0] === 'user2' && this.include[1][0] === 'user1')) {
-          console.log(this.include);
           return this.handleSpecialMatchInclude();
         }
       }
@@ -230,6 +229,10 @@ RestQuery.prototype.replaceInQuery = function() {
     return;
   }
 
+  if (!this.auth.isMaster) {
+    throw new Parse.Error(Parse.Error.INVALID_QUERY, 'improper usage of $inQuery');
+  }
+
   // The inQuery value must have precisely two keys - where and className
   var inQueryValue = inQueryObject['$inQuery'];
   if (!inQueryValue.where || !inQueryValue.className) {
@@ -278,6 +281,10 @@ RestQuery.prototype.replaceNotInQuery = function() {
     return;
   }
 
+  if (!this.auth.isMaster) {
+    throw new Parse.Error(Parse.Error.INVALID_QUERY, 'improper usage of $notInQuery');
+  }
+
   // The notInQuery value must have precisely two keys - where and className
   var notInQueryValue = notInQueryObject['$notInQuery'];
   if (!notInQueryValue.where || !notInQueryValue.className) {
@@ -321,6 +328,10 @@ RestQuery.prototype.replaceSelect = function() {
   var selectObject = findObjectWithKey(this.restWhere, '$select');
   if (!selectObject) {
     return;
+  }
+
+  if (!this.auth.isMaster) {
+    throw new Parse.Error(Parse.Error.INVALID_QUERY, 'improper usage of $select');
   }
 
   // The select value must have precisely two keys - query and key
@@ -371,6 +382,10 @@ RestQuery.prototype.replaceDontSelect = function() {
   var dontSelectObject = findObjectWithKey(this.restWhere, '$dontSelect');
   if (!dontSelectObject) {
     return;
+  }
+
+  if (!this.auth.isMaster) {
+    throw new Parse.Error(Parse.Error.INVALID_QUERY, 'improper usage of $dontSelect');
   }
 
   // The dontSelect value must have precisely two keys - query and key
@@ -586,6 +601,10 @@ RestQuery.prototype.handleSpecialMatchInclude = function() {
 RestQuery.prototype.handleInclude = function() {
   if (this.include.length == 0) {
     return;
+  }
+
+  if (!this.auth.isMaster) {
+    throw new Parse.Error(Parse.Error.INVALID_QUERY, 'improper usage of include');
   }
 
   var pathResponse = includePath(this.config, this.auth,
