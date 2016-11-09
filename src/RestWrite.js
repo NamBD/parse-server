@@ -863,13 +863,31 @@ RestWrite.prototype.runDatabaseOperation = function() {
         throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Cannot update field.');
       }
 
-      if (!this.auth.isMaster && this.auth.user && this.auth.user.id && this.data.userId) {
+      if (this.data.appIdentifier) {
+        if (this.data.appIdentifier !== 'com.baddevelopment.Firstlust') {
+          throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Invalid app ID.');
+        }
+      }
+
+      if (this.data.appName) {
+        if (this.data.appName !== 'LUCK') {
+          throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Invalid app name.');
+        }
+      }
+
+      if (!this.auth.isMaster) {
+        if (!this.auth.user || !this.auth.user.id) {
+          throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Invalid user ID.');
+        }
+      }
+
+      if (!this.auth.isMaster && this.data.userId) {
         if (this.data.userId !== this.auth.user.id && this.data.userId !== 'none') {
           throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Invalid user ID.');
         }
       }
 
-      if (!this.auth.isMaster && this.auth.user && this.auth.user.id && this.data.badge) {
+      if (!this.auth.isMaster && this.data.badge) {
         if (this.data.badge !== 0) {
           throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Badge must be 0.');
         }
@@ -924,6 +942,18 @@ RestWrite.prototype.runDatabaseOperation = function() {
       if (this.data.userId) {
         if (this.data.userId !== this.auth.user.id && this.data.userId !== 'none') {
           throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Invalid user ID.');
+        }
+      }
+
+      if (this.data.appIdentifier) {
+        if (this.data.appIdentifier !== 'com.baddevelopment.Firstlust') {
+          throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Invalid app ID.');
+        }
+      }
+
+      if (this.data.appName) {
+        if (this.data.appName !== 'LUCK') {
+          throw new Parse.Error(Parse.Error.INVALID_KEY_NAME, 'Invalid app name.');
         }
       }
 
