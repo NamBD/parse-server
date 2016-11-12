@@ -49,7 +49,7 @@ export default class MongoCollection {
 
   count(query, { skip, limit, sort, maxTimeMS } = {}) {
     let countOperation = this._mongoCollection.count(query, { skip, limit, sort, maxTimeMS });
-    console.log("Count Run");
+
     return countOperation;
   }
 
