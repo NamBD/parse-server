@@ -573,6 +573,10 @@ RestWrite.prototype.handleInstallation = function() {
                           'must be specified in this operation');
   }
 
+  if (this.query && !this.data.deviceToken && !this.data.installationId && !this.data.deviceType) {
+    return;
+  }
+
   // If the device token is 64 characters long, we assume it is for iOS
   // and lowercase it.
   if (this.data.deviceToken && this.data.deviceToken.length == 64) {
