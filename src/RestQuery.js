@@ -508,6 +508,12 @@ RestQuery.prototype.runCount = function() {
   if (!this.doCount) {
     return;
   }
+
+  if (!this.auth.isMaster) {
+    console.log("COUNT");
+    throw new Parse.Error(Parse.Error.INVALID_QUERY, 'improper usage of count');
+  }
+
   this.findOptions.count = true;
   delete this.findOptions.skip;
   delete this.findOptions.limit;
@@ -604,6 +610,7 @@ RestQuery.prototype.handleInclude = function() {
   }
 
   if (!this.auth.isMaster) {
+    console.log("INCLUDE");
     throw new Parse.Error(Parse.Error.INVALID_QUERY, 'improper usage of include');
   }
 
