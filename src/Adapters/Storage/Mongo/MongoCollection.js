@@ -41,11 +41,16 @@ export default class MongoCollection {
     if (keys) {
       findOperation = findOperation.project(keys);
     }
+
+    findOperation = findOperation.maxTimeMS(10000);
+
     return findOperation.toArray();
   }
 
-  count(query, { skip, limit, sort } = {}) {
-    return this._mongoCollection.count(query, { skip, limit, sort });
+  count(query, { skip, limit, sort, maxTimeMS } = {}) {
+    let countOperation = this._mongoCollection.count(query, { skip, limit, sort, maxTimeMS });
+    console.log("Count Run");
+    return countOperation;
   }
 
   insertOne(object) {

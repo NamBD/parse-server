@@ -365,7 +365,9 @@ export class MongoStorageAdapter {
   count(className, schema, query) {
     schema = convertParseSchemaToMongoSchema(schema);
     return this._adaptiveCollection(className)
-    .then(collection => collection.count(transformWhere(className, query, schema)));
+    .then(collection => collection.count(transformWhere(className, query, schema), {
+      maxTimeMS: 1000
+    }));
   }
 
   performInitialization() {
