@@ -270,12 +270,13 @@ DatabaseController.prototype.update = function(className, query, update, {
       if (skipSanitization) {
         return Promise.resolve(result);
       }
-      return sanitizeDatabaseResult(originalUpdate, result);
+      var needMessagesBool = className === 'match';
+      return sanitizeDatabaseResult(originalUpdate, result, needMessagesBool);
     });
   });
 };
 
-function sanitizeDatabaseResult(originalObject, result) {
+function sanitizeDatabaseResult(originalObject, result, needMessages = false) {
   let response = {};
   if (!result) {
     return Promise.resolve(response);
@@ -289,6 +290,16 @@ function sanitizeDatabaseResult(originalObject, result) {
       response[key] = result[key];
     }
   });
+
+  console.log(needMessages);
+
+  if (needMessages && !response['messages'] && result['messages']) {
+    response['messages'] = result['messages'];
+    console.log('new add');
+  }
+
+  console.log(response);
+
   return Promise.resolve(response);
 }
 
