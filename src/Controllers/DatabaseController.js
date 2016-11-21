@@ -291,14 +291,9 @@ function sanitizeDatabaseResult(originalObject, result, needMessages = false) {
     }
   });
 
-  console.log(needMessages);
-
   if (needMessages && !response['messages'] && result['messages']) {
     response['messages'] = result['messages'];
-    console.log('new add');
   }
-
-  console.log(response);
 
   return Promise.resolve(response);
 }
