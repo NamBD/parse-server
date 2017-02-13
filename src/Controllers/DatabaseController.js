@@ -19,7 +19,14 @@ function addWriteACL(query, acl) {
 function addReadACL(query, acl) {
   let newQuery = _.cloneDeep(query);
   //Can't be any existing '_rperm' query, we don't allow client queries on that, no need to $and
-  newQuery._rperm = { "$in" : [null, "*", ...acl]};
+  if (newQuery.hasOwnProperty('$or')) {
+    newQuery.$or = newQuery.$or.map(function(qobj) {
+      qobj._rperm = {'$in' : [null, '*', ...acl]};
+      return qobj;
+    });
+  } else {
+    newQuery._rperm = { "$in" : [null, "*", ...acl]};
+  }
   return newQuery;
 }
 
