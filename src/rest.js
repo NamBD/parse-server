@@ -40,9 +40,8 @@ function find(config, auth, className, restWhere, restOptions, clientSDK) {
       var reqDate = restWhere.createdAt.iso;
 
       var newRestWhere = { '$or':
-      [ { user1Id: auth.user.id, type: reqType, createdAt: { '$gt': { __type: 'Date', iso: reqDate } } },
-        { user2Id: auth.user.id, type: reqType, createdAt: { '$gt': { __type: 'Date', iso: reqDate } } } ],
-        isActive: true };
+      [ { user1Id: auth.user.id, isActive: true, type: reqType, createdAt: { '$gt': { __type: 'Date', iso: reqDate } } },
+        { user2Id: auth.user.id, isActive: true, type: reqType, createdAt: { '$gt': { __type: 'Date', iso: reqDate } } } ] };
 
       restWhere = newRestWhere;
 
