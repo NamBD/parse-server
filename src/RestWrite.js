@@ -914,6 +914,9 @@ RestWrite.prototype.runDatabaseOperation = function() {
       }
     }
 
+    // Ignore createdAt when update
+    delete this.data.createdAt;
+
     // Run an update
     return this.config.database.update(this.className, this.query, this.data, this.runOptions)
     .then(response => {
