@@ -327,7 +327,7 @@ RestWrite.prototype.handleAuthData = function(authData) {
 
         // If we didn't change the auth data, just keep going
         if (!hasMutatedAuthData) {
-          return;
+          return this.handleAuthDataValidation(authData);
         }
         // We have authData that is updated on login
         // that can happen when token are refreshed,
