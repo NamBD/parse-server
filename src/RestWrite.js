@@ -319,7 +319,7 @@ RestWrite.prototype.handleAuthData = function(authData) {
 
         // need to set the objectId first otherwise location has trailing undefined
         this.data.objectId = userResult.objectId;
-
+        console.log(userResult);
         this.response = {
           response: userResult,
           location: this.location()
