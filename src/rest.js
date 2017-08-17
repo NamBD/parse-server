@@ -117,7 +117,7 @@ function del(config, auth, className, objectId, clientSDK) {
     if (triggers.getTrigger(className, triggers.Types.beforeDelete, config.applicationId) ||
         triggers.getTrigger(className, triggers.Types.afterDelete, config.applicationId) ||
         (config.liveQueryController && config.liveQueryController.hasLiveQuery(className)) ||
-        className == '_Session') {
+        className === '_Session') {
       return find(config, Auth.master(config), className, {objectId: objectId})
       .then((response) => {
         if (response && response.results && response.results.length) {
@@ -129,7 +129,7 @@ function del(config, auth, className, objectId, clientSDK) {
             }
           }
 
-          if (className == '_Session') {
+          if (className === '_Session') {
             var cacheAdapter = config.cacheController;
             cacheAdapter.user.del(firstResult.sessionToken);
           }
