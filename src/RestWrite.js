@@ -324,18 +324,19 @@ RestWrite.prototype.handleAuthData = function(authData) {
         delete results[0].firstMessages;
         delete results[0].likes;
 
-        // need to set the objectId first otherwise location has trailing undefined
-        this.data.objectId = userResult.objectId;
-
         if (!this.query || !this.query.objectId) { // this a login call, no userId passed
+          // need to set the objectId first otherwise location has trailing undefined
+          this.data.objectId = userResult.objectId;
           this.response = {
             response: userResult,
             location: this.location()
           };
         }
         // If we didn't change the auth data, just keep going
-        if (!hasMutatedAuthData) {
+        if (!hasMutatedAuthData && this.response) {
           return this.handleAuthDataValidation(authData);
+        } else if (!hasMutatedAuthData) {
+          return;
         }
         // We have authData that is updated on login
         // that can happen when token are refreshed,
