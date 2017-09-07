@@ -11,7 +11,7 @@ const transformKey = (className, fieldName, schema) => {
     case 'updatedAt': return '_updated_at';
     case 'sessionToken': return '_session_token';
   }
-  
+
   if (schema.fields[fieldName] && schema.fields[fieldName].__type == 'Pointer') {
     fieldName = '_p_' + fieldName;
   } else if (schema.fields[fieldName] && schema.fields[fieldName].type == 'Pointer') {
@@ -96,7 +96,7 @@ const transformKeyValueForUpdate = (className, restKey, restValue, parseFormatSc
   }
 
   // Handle normal objects by recursing
-  value = _.mapValues(restValue, transformInteriorValue);
+  value = mapValues(restValue, transformInteriorValue);
   return {key, value};
 }
 
@@ -121,7 +121,7 @@ const transformInteriorValue = restValue => {
   }
 
   // Handle normal objects by recursing
-  return _.mapValues(restValue, transformInteriorValue);
+  return mapValues(restValue, transformInteriorValue);
 }
 
 const valueAsDate = value => {
@@ -298,7 +298,7 @@ const parseObjectKeyValueToMongoObjectKeyValue = (restKey, restValue, schema) =>
   if (Object.keys(restValue).some(key => key.includes('$') || key.includes('.'))) {
     throw new Parse.Error(Parse.Error.INVALID_NESTED_KEY, "Nested keys should not contain the '$' or '.' characters");
   }
-  value = _.mapValues(restValue, transformInteriorValue);
+  value = mapValues(restValue, transformInteriorValue);
   return {key: restKey, value};
 }
 
@@ -652,6 +652,14 @@ function transformUpdateOperator({
   }
 }
 
+function mapValues(object, iterator) {
+  const result = {};
+  Object.keys(object).forEach((key) => {
+    result[key] = iterator(object[key]);
+  });
+  return result;
+}
+
 const nestedMongoObjectToNestedParseObject = mongoObject => {
   switch(typeof mongoObject) {
   case 'string':
@@ -686,7 +694,7 @@ const nestedMongoObjectToNestedParseObject = mongoObject => {
       return BytesCoder.databaseToJSON(mongoObject);
     }
 
-    return _.mapValues(mongoObject, nestedMongoObjectToNestedParseObject);
+    return mapValues(mongoObject, nestedMongoObjectToNestedParseObject);
   default:
     throw 'unknown js type';
   }
@@ -874,7 +882,7 @@ var BytesCoder = {
     };
   },
 
-  isValidDatabaseObject(object) {    
+  isValidDatabaseObject(object) {
     return (object instanceof mongodb.Binary) || this.isBase64Value(object);
   },
 
