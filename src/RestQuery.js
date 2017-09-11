@@ -560,7 +560,13 @@ RestQuery.prototype.handleSpecialMatchInclude = function() {
   includeRestOptions.keys = 'gender,badge,age,pushActive,bio,image0,image1,image2,image3,image4';
 
   let queryPromises = Object.keys(pointersHash).map((className) => {
-    var where = {'objectId': {'$in': Array.from(pointersHash[className])}};
+    const objectIds = Array.from(pointersHash[className]);
+    let where;
+    if (objectIds.length === 1) {
+      where = {'objectId': objectIds[0]};
+    } else {
+      where = {'objectId': {'$in': objectIds}};
+    }
     var query = new RestQuery(this.config, this.auth, className, where, includeRestOptions);
     return query.execute({op: 'get'}).then((results) => {
       results.className = className;
@@ -679,7 +685,13 @@ function includePath(config, auth, response, path, restOptions = {}, startingCla
   }
 
   let queryPromises = Object.keys(pointersHash).map((className) => {
-    let where = {'objectId': {'$in': Array.from(pointersHash[className])}};
+    const objectIds = Array.from(pointersHash[className]);
+    let where;
+    if (objectIds.length === 1) {
+      where = {'objectId': objectIds[0]};
+    } else {
+      where = {'objectId': {'$in': objectIds}};
+    }
     var query = new RestQuery(config, auth, className, where, includeRestOptions);
     return query.execute({op: 'get'}).then((results) => {
       results.className = className;
