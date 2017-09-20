@@ -538,6 +538,16 @@ RestWrite.prototype.handleSession = function() {
                           'ACL on a Session.');
   }
 
+  if (this.query) {
+    if (this.data.user && !this.auth.isMaster && this.data.user.objectId != this.auth.user.id) {
+      throw new Parse.Error(Parse.Error.INVALID_KEY_NAME);
+    } else if (this.data.installationId) {
+      throw new Parse.Error(Parse.Error.INVALID_KEY_NAME);
+    } else if (this.data.sessionToken) {
+      throw new Parse.Error(Parse.Error.INVALID_KEY_NAME);
+    }
+  }
+
   if (!this.query && !this.auth.isMaster) {
     var token = 'r:' + cryptoUtils.newToken();
     var expiresAt = this.config.generateSessionExpiresAt();
@@ -555,7 +565,7 @@ RestWrite.prototype.handleSession = function() {
       expiresAt: Parse._encode(expiresAt)
     };
     for (var key in this.data) {
-      if (key == 'objectId') {
+      if (key === 'objectId' || key === 'user') {
         continue;
       }
       sessionData[key] = this.data[key];
