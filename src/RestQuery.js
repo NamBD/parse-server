@@ -584,6 +584,7 @@ RestQuery.prototype.handleSpecialMatchInclude = function() {
           delete obj.sessionToken;
           delete obj.authData;
         }
+        console.log(obj);
         replace[obj.objectId] = obj;
       }
       return replace;
