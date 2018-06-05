@@ -68,6 +68,7 @@ function RestQuery(config, auth, className, restWhere = {}, restOptions = {}, cl
       break;
     case 'skip':
     case 'limit':
+      console.log(restOptions[option]);
       this.findOptions[option] = restOptions[option];
       break;
     case 'order':
@@ -394,7 +395,9 @@ RestQuery.prototype.replaceDontSelect = function() {
   }
   let additionalOptions = {
     redirectClassNameForKey: dontSelectValue.query.redirectClassNameForKey,
-    keys: dontSelectValue.key
+    keys: dontSelectValue.key,
+    order: '-priority,-createdAt',
+    limit: 500
   };
 
   var subquery = new RestQuery(
