@@ -3,7 +3,6 @@
 
 var SchemaController = require('./Controllers/SchemaController');
 var Parse = require('parse/node').Parse;
-import Auth from './Auth';
 
 import { default as FilesController } from './Controllers/FilesController';
 
@@ -520,6 +519,11 @@ RestQuery.prototype.runCount = function() {
 
 RestQuery.prototype.handleSpecialMatchInclude = function() {
 
+  if (this.className !== 'match') {
+    console.log("exit 1");
+    return;
+  }
+
   var pointers = findPointers(this.response.results, ['user1']);
   var user2Pointers = findPointers(this.response.results, ['user2']);
 
@@ -548,6 +552,7 @@ RestQuery.prototype.handleSpecialMatchInclude = function() {
   }
 
   if (!pointersHash['_User']) {
+    console.log("exit 2");
     return;
   }
 
@@ -562,7 +567,7 @@ RestQuery.prototype.handleSpecialMatchInclude = function() {
     } else {
       where = {'objectId': {'$in': objectIds}};
     }
-    var query = new RestQuery(this.config, Auth.master(this.config), className, where, includeRestOptions);
+    var query = new RestQuery(this.config, this.auth, className, where, includeRestOptions, null, true);
     return query.execute({op: 'get'}).then((results) => {
       results.className = className;
       return Promise.resolve(results);
@@ -578,8 +583,6 @@ RestQuery.prototype.handleSpecialMatchInclude = function() {
         if (obj.className === "_User" && !this.auth.isMaster) {
           delete obj.sessionToken;
           delete obj.authData;
-          obj.createdAt = '2016-09-08T09:11:11.382Z';
-          obj.updatedAt = '2016-09-08T09:16:52.909Z';
         }
         console.log(obj);
         replace[obj.objectId] = obj;
