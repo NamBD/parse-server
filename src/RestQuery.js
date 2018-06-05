@@ -71,6 +71,7 @@ function RestQuery(config, auth, className, restWhere = {}, restOptions = {}, cl
       this.findOptions[option] = restOptions[option];
       break;
     case 'order':
+      console.log(restOptions.order);
       var fields = restOptions.order.split(',');
       var sortMap = {};
       for (var field of fields) {
