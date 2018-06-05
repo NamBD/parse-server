@@ -3,6 +3,7 @@
 
 var SchemaController = require('./Controllers/SchemaController');
 var Parse = require('parse/node').Parse;
+var Auth = require('./Auth');
 
 import { default as FilesController } from './Controllers/FilesController';
 
@@ -14,7 +15,7 @@ import { default as FilesController } from './Controllers/FilesController';
 //   include
 //   keys
 //   redirectClassNameForKey
-function RestQuery(config, auth, className, restWhere = {}, restOptions = {}, clientSDK) {
+function RestQuery(config, auth, className, restWhere = {}, restOptions = {}, clientSDK, takeSpecialRoute = false) {
 
   this.config = config;
   this.auth = auth;
@@ -23,8 +24,9 @@ function RestQuery(config, auth, className, restWhere = {}, restOptions = {}, cl
   this.restOptions = restOptions;
   this.clientSDK = clientSDK;
   this.response = null;
+  this.takeSpecialRoute = takeSpecialRoute;
   this.findOptions = {};
-  if (!this.auth.isMaster) {
+  if (!this.auth.isMaster && !this.takeSpecialRoute) {
     this.findOptions.acl = this.auth.user ? [this.auth.user.id] : null;
     if (this.className == '_Session') {
       if (!this.findOptions.acl) {
@@ -121,18 +123,11 @@ RestQuery.prototype.execute = function(executeOptions) {
   }).then(() => {
     return this.runCount();
   }).then(() => {
-
-    if (this.className === 'match' && this.include.length === 2) {
-      if (this.include[0].length === 1 && this.include[1].length === 1) {
-        if ((this.include[0][0] === 'user1' && this.include[1][0] === 'user2') ||
-            (this.include[0][0] === 'user2' && this.include[1][0] === 'user1')) {
-          return this.handleSpecialMatchInclude();
-        }
-      }
+    if (this.takeSpecialRoute) {
+      console.log(this.findOptions.acl);
+      return this.handleSpecialMatchInclude();
     }
-
     return this.handleInclude();
-
   }).then(() => {
     return this.response;
   });
@@ -158,7 +153,7 @@ RestQuery.prototype.buildRestWhere = function() {
 
 // Uses the Auth object to get the list of roles, adds the user id
 RestQuery.prototype.getUserAndRoleACL = function() {
-  if (this.auth.isMaster || !this.auth.user) {
+  if (this.auth.isMaster || !this.auth.user || this.takeSpecialRoute) {
     return Promise.resolve();
   }
   return this.auth.getUserRoles().then((roles) => {
@@ -567,7 +562,7 @@ RestQuery.prototype.handleSpecialMatchInclude = function() {
     } else {
       where = {'objectId': {'$in': objectIds}};
     }
-    var query = new RestQuery(this.config, this.auth, className, where, includeRestOptions);
+    var query = new RestQuery(this.config, Auth.master(this.config), className, where, includeRestOptions);
     return query.execute({op: 'get'}).then((results) => {
       results.className = className;
       return Promise.resolve(results);
@@ -583,13 +578,15 @@ RestQuery.prototype.handleSpecialMatchInclude = function() {
         if (obj.className === "_User" && !this.auth.isMaster) {
           delete obj.sessionToken;
           delete obj.authData;
+          obj.createdAt = '2016-09-08T09:11:11.382Z';
+          obj.updatedAt = '2016-09-08T09:16:52.909Z';
         }
         console.log(obj);
         replace[obj.objectId] = obj;
       }
       return replace;
     }, {})
-
+    console.log(this.response.count);
     var resp = {
       results: replacePointers(this.response.results, ['user1'], replace, this.className, this.auth)
     };

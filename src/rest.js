@@ -20,9 +20,10 @@ function find(config, auth, className, restWhere, restOptions, clientSDK) {
   return triggers.maybeRunQueryTrigger(triggers.Types.beforeFind, className, restWhere, restOptions, config, auth).then((result) => {
     restWhere = result.restWhere || restWhere;
     restOptions = result.restOptions || restOptions;
+    var takeSpecialRoute = false;
 
     if (className === 'match' && !auth.isMaster) {
-
+      console.log("match find");
       if (!auth.user || !auth.user.id) {
         throw new Parse.Error(Parse.Error.OPERATION_FORBIDDEN, 'Need more info');
       }
@@ -59,9 +60,10 @@ function find(config, auth, className, restWhere, restOptions, clientSDK) {
       }
 
       restOptions = newRestOptions;
+      takeSpecialRoute = true;
     }
 
-    let query = new RestQuery(config, auth, className, restWhere, restOptions, clientSDK);
+    let query = new RestQuery(config, auth, className, restWhere, restOptions, clientSDK, takeSpecialRoute);
     return query.execute();
   });
 }
