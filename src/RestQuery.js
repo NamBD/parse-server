@@ -3,7 +3,7 @@
 
 var SchemaController = require('./Controllers/SchemaController');
 var Parse = require('parse/node').Parse;
-var Auth = require('./Auth');
+import Auth from './Auth';
 
 import { default as FilesController } from './Controllers/FilesController';
 
