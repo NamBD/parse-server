@@ -23,7 +23,7 @@ function find(config, auth, className, restWhere, restOptions, clientSDK) {
     var takeSpecialRoute = false;
 
     if (className === 'match' && !auth.isMaster) {
-      console.log("match find");
+
       if (!auth.user || !auth.user.id) {
         throw new Parse.Error(Parse.Error.OPERATION_FORBIDDEN, 'Need more info');
       }

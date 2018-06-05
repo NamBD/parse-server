@@ -123,7 +123,6 @@ RestQuery.prototype.execute = function(executeOptions) {
     return this.runCount();
   }).then(() => {
     if (this.takeSpecialRoute) {
-      console.log(this.findOptions.acl);
       return this.handleSpecialMatchInclude();
     }
     return this.handleInclude();
@@ -520,7 +519,6 @@ RestQuery.prototype.runCount = function() {
 RestQuery.prototype.handleSpecialMatchInclude = function() {
 
   if (this.className !== 'match') {
-    console.log("exit 1");
     return;
   }
 
@@ -552,7 +550,6 @@ RestQuery.prototype.handleSpecialMatchInclude = function() {
   }
 
   if (!pointersHash['_User']) {
-    console.log("exit 2");
     return;
   }
 
@@ -584,12 +581,12 @@ RestQuery.prototype.handleSpecialMatchInclude = function() {
           delete obj.sessionToken;
           delete obj.authData;
         }
-        console.log(obj);
+
         replace[obj.objectId] = obj;
       }
       return replace;
     }, {})
-    console.log(this.response.count);
+
     var resp = {
       results: replacePointers(this.response.results, ['user1'], replace, this.className, this.auth)
     };
