@@ -599,7 +599,7 @@ RestQuery.prototype.handleSpecialMatchInclude = function() {
       results: replacePointers(this.response.results, ['user2'], replace, this.className, this.auth)
     };
     if (this.response.count) {
-      resp.count = this.response.count;
+      resp2.count = this.response.count;
     }
     this.response = resp2;
 
