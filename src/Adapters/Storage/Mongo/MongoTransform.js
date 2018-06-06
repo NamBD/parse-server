@@ -534,24 +534,26 @@ function transformConstraint(constraint, inArray) {
       break;
 
     case '$nearSphere':
-      var point = constraint[key];
-      answer[key] = [point.longitude, point.latitude];
+      const point = constraint[key];
+      const maxDistance = constraint['$maxDistance'];
+
+      if (!maxDistance) {
+        throw new Parse.Error(Parse.Error.INVALID_JSON, 'need maxDistance');
+      }
+
+      answer['$geoWithin'] = {$centerSphere: [[point.longitude, point.latitude], maxDistance]};
       break;
 
     case '$maxDistance':
-      answer[key] = constraint[key];
       break;
 
     // The SDKs don't seem to use these but they are documented in the
     // REST API docs.
     case '$maxDistanceInRadians':
-      answer['$maxDistance'] = constraint[key];
       break;
     case '$maxDistanceInMiles':
-      answer['$maxDistance'] = constraint[key] / 3959;
       break;
     case '$maxDistanceInKilometers':
-      answer['$maxDistance'] = constraint[key] / 6371;
       break;
 
     case '$select':
