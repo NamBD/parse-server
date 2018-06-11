@@ -182,6 +182,7 @@ export class UsersRouter extends ClassesRouter {
   }
 
   handleLogOut(req) {
+    console.log('logout');
     let success = {response: {}};
     if (req.info && req.info.sessionToken) {
       return rest.find(req.config, Auth.master(req.config), '_Session',

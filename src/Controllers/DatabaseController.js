@@ -260,6 +260,7 @@ DatabaseController.prototype.update = function(className, query, update, {
       }
       if (acl && className !== '_Installation') {
         query = addWriteACL(query, acl);
+        console.log(className);
       }
       validateQuery(query);
       return schemaController.getOneSchema(className, true)
