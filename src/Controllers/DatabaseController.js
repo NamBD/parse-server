@@ -258,7 +258,7 @@ DatabaseController.prototype.update = function(className, query, update, {
       if (!query) {
         return Promise.resolve();
       }
-      if (acl) {
+      if (acl && className !== '_Installation') {
         query = addWriteACL(query, acl);
       }
       validateQuery(query);
